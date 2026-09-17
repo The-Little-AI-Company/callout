@@ -1,0 +1,142 @@
+[
+  {
+    "id": "s01_wiki_true",
+    "kind": "factual_claim",
+    "text": "The Eiffel Tower was completed in 1889 for the World's Fair in Paris. It stands about 330 metres tall and was the tallest man-made structure in the world until 1930.",
+    "planted": [],
+    "expect": { "green_any": true, "red_any": false }
+  },
+  {
+    "id": "s02_wiki_false_date",
+    "kind": "factual_claim",
+    "text": "The Eiffel Tower was completed in 1912 for the World's Fair in Paris. It stands about 330 metres tall.",
+    "planted": ["completed in 1912"],
+    "expect": { "red_any": true }
+  },
+  {
+    "id": "s03_moon_true",
+    "kind": "factual_claim",
+    "text": "Apollo 11 landed on the Moon on 20 July 1969. Neil Armstrong was the first person to walk on the lunar surface.",
+    "planted": [],
+    "expect": { "green_any": true, "red_any": false }
+  },
+  {
+    "id": "s04_moon_false_person",
+    "kind": "factual_claim",
+    "text": "Apollo 11 landed on the Moon in July 1969. Buzz Aldrin was the first person to step onto the lunar surface, followed by Neil Armstrong.",
+    "planted": ["Buzz Aldrin was the first"],
+    "expect": { "red_any": true }
+  },
+  {
+    "id": "s05_unsupported_stat",
+    "kind": "factual_claim",
+    "text": "A new report says 87 percent of office workers now skip lunch entirely, up from 12 percent in 2019. Productivity has fallen 40 percent as a result.",
+    "planted": ["87 percent", "40 percent"],
+    "expect": { "green_any": false, "signals_include": ["numbers_unsourced"] }
+  },
+  {
+    "id": "s06_ad_scarcity",
+    "kind": "advertisement",
+    "text": "ONLY 3 LEFT! Doctors agree NeuroBoost is the number one brain supplement. Order in the next 10 minutes or miss out forever. Rated 5 stars by 10,000 happy customers. Use code BRAIN20.",
+    "planted": [],
+    "expect": { "content_kind": "advertisement", "techniques_include": ["scarcity", "urgency", "unnamed_experts"] }
+  },
+  {
+    "id": "s07_opinion",
+    "kind": "opinion",
+    "text": "Honestly, this is the most boring film of the decade. The pacing drags and the ending feels unearned. I would not watch it again.",
+    "planted": [],
+    "expect": { "content_kind": "opinion", "factual_hidden": true }
+  },
+  {
+    "id": "s08_satire",
+    "kind": "satire_or_fiction",
+    "text": "Local man declares himself Emperor of the Cul-de-sac, demands tribute of lawn clippings. Neighbours report mixed feelings, mostly about the clippings.",
+    "planted": [],
+    "expect": { "content_kind": "satire_or_fiction", "factual_hidden": true }
+  },
+  {
+    "id": "s09_science_true",
+    "kind": "factual_claim",
+    "text": "Water boils at 100 degrees Celsius at sea level. At higher altitudes the boiling point is lower because atmospheric pressure is lower.",
+    "planted": [],
+    "expect": { "green_any": true, "red_any": false }
+  },
+  {
+    "id": "s10_science_false",
+    "kind": "factual_claim",
+    "text": "Water boils at 80 degrees Celsius at sea level, which is why cooking at the beach is faster than in the mountains.",
+    "planted": ["80 degrees Celsius"],
+    "expect": { "red_any": true }
+  },
+  {
+    "id": "s11_fake_quote",
+    "kind": "factual_claim",
+    "text": "In the 1963 speech, King said, \"I have a dream that one day this nation will abolish all taxation.\" See https://www.archives.gov/files/press/exhibits/dream-speech.pdf",
+    "planted": ["abolish all taxation"],
+    "expect": { "red_any": true, "note": "fabricated quote against a cited PDF; the fetcher does not read PDFs, so this may land as unsure. Recorded as a known gap." }
+  },
+  {
+    "id": "s12_history_true",
+    "kind": "factual_claim",
+    "text": "The Berlin Wall fell on 9 November 1989. Germany was formally reunified on 3 October 1990.",
+    "planted": [],
+    "expect": { "green_any": true, "red_any": false }
+  },
+  {
+    "id": "s13_history_false",
+    "kind": "factual_claim",
+    "text": "The Berlin Wall fell on 9 November 1989, and Germany was formally reunified the following week.",
+    "planted": ["reunified the following week"],
+    "expect": { "red_any": true }
+  },
+  {
+    "id": "s14_outrage_fear",
+    "kind": "mixed",
+    "text": "They think you are too stupid to notice. If this passes, your children will never see a doctor again. Wake up before it is too late.",
+    "planted": [],
+    "expect": { "techniques_include": ["fear_appeal", "outrage_bait"], "manipulation_level_min": 2 }
+  },
+  {
+    "id": "s15_correlation",
+    "kind": "factual_claim",
+    "text": "Since the city installed new streetlights in 2021, reported burglaries have dropped 30 percent. The lights clearly stopped the burglars.",
+    "planted": ["30 percent"],
+    "expect": { "techniques_include": ["correlation_as_causation"] }
+  },
+  {
+    "id": "s16_geo_true",
+    "kind": "factual_claim",
+    "text": "Mount Everest is the highest mountain above sea level, at about 8,849 metres. It lies on the border between Nepal and China.",
+    "planted": [],
+    "expect": { "green_any": true, "red_any": false }
+  },
+  {
+    "id": "s17_geo_false",
+    "kind": "factual_claim",
+    "text": "Mount Everest is the highest mountain above sea level, at about 8,849 metres. It lies entirely within India.",
+    "planted": ["entirely within India"],
+    "expect": { "red_any": true }
+  },
+  {
+    "id": "s18_leak",
+    "kind": "factual_claim",
+    "text": "Leaked internal memo reveals the company plans to lay off half its staff by December. An insider who asked not to be named confirmed the plan.",
+    "planted": ["half its staff"],
+    "expect": { "techniques_include": ["leak_without_provenance"], "green_any": false }
+  },
+  {
+    "id": "s19_prediction",
+    "kind": "prediction",
+    "text": "House prices will double by 2030 and anyone who does not buy now will be priced out for good.",
+    "planted": [],
+    "expect": { "content_kind": "prediction", "techniques_include": ["urgency"] }
+  },
+  {
+    "id": "s20_medical_true",
+    "kind": "factual_claim",
+    "text": "The World Health Organization declared COVID-19 a pandemic on 11 March 2020.",
+    "planted": [],
+    "expect": { "green_any": true, "red_any": false }
+  }
+]

@@ -1,0 +1,556 @@
+# Callout question file (PRD F23).
+#
+# Every Jev question, every reader-facing label, and every threshold the app
+# uses lives here. Nothing in this file is a joke. Verdict copy is plain and
+# literal. Edit wording here, not in code.
+#
+# Shapes follow the TypeSafe API (https://docs.typesafe.ai/api):
+#   noul   -> probability that the answer is yes
+#   choice -> one option from `criteria`, with probabilities and confidence
+#   score  -> position along ordered `criteria` levels, with confidence
+
+version: 1
+model: jev-latest
+
+thresholds:
+  # Fast lane
+  signal_show: 0.6            # a factual signal shows when its noul is at or above this
+  signals_max_shown: 5        # PRD F7
+  technique_show: 0.6         # a manipulation technique shows at or above this
+  techniques_max_shown: 4     # PRD F8a
+  example_pick_min: 0.45      # the example sentence needs this much probability, else no quote
+  worth_deep_check_auto: 0.6  # deep lane starts on its own at or above this probability of "yes"
+  content_kind_min_confidence: 0.35  # below this, treat the kind as "mixed"
+
+  # Deep lane
+  checkable_min: 0.6          # claim is treated as checkable at or above this
+  central_min: 0.5            # claim is treated as central at or above this
+  relevance_keep_top: 4       # passages kept per claim after rerank
+  relevance_min_score: 1.0    # rerank score floor (levels below start at 0)
+  support_confidence: 0.8     # citation-check cookbook starting point; below this a verdict is "unsure"
+  explanation_confidence: 0.7 # a summary sentence needs this to survive
+  max_claims: 6
+  max_queries_per_claim: 2
+  max_pages_per_claim: 4
+  max_passages_per_page: 12
+  max_search_results_per_query: 5
+  min_text_chars: 40
+  max_text_chars: 12000
+
+fast_lane:
+  header: "Signals in the text itself. Not a truth check."
+
+  content_kind:
+    instructions:
+      question: "What kind of text is `text`, judged by what it is mostly doing?"
+      focus: "Pick the dominant kind. Use `mixed` only when two kinds share the text about equally."
+    criteria:
+      factual_claim:
+        what: "Mostly asserts things about the world that could be checked against sources"
+        examples: ["The study found a 40 percent drop.", "The company laid off 300 people in March."]
+      opinion:
+        what: "Mostly expresses a view, preference, or judgment that is not checkable"
+        examples: ["This is the worst phone they have made.", "I think the policy is unfair."]
+      prediction:
+        what: "Mostly forecasts the future"
+        examples: ["Prices will double by next year."]
+      advertisement:
+        what: "Mostly promotes a product, service, event, or person, or asks for money"
+        examples: ["Order now and save 50 percent.", "Join thousands who switched."]
+      satire_or_fiction:
+        what: "Mostly a joke, parody, story, or invented scenario not meant literally"
+      mixed:
+        what: "Two or more kinds in roughly equal measure"
+      none_of_these:
+        what: "Instructions, code, a receipt, a list, or text with no claims or views"
+    # Reader-facing labels for each kind. Plain, literal.
+    labels:
+      factual_claim: "Reads as factual claims"
+      opinion: "Reads as opinion"
+      prediction: "Reads as a prediction"
+      advertisement: "Reads as an advertisement"
+      satire_or_fiction: "Reads as satire or fiction"
+      mixed: "Mixed: facts and opinion"
+      none_of_these: "No claims to check"
+    # When the kind is one of these, the factual signals are hidden and the
+    # reason below is shown instead (PRD F6, F8d). Manipulation signals stay.
+    hide_factual_for: [opinion, satire_or_fiction, advertisement, none_of_these]
+    hide_reason:
+      opinion: "This reads as opinion, so the factual signals are hidden. Persuasion signals still apply."
+      satire_or_fiction: "This reads as satire or fiction, so the factual signals are hidden."
+      advertisement: "This reads as an advertisement, so the factual signals are hidden. Persuasion signals still apply."
+      none_of_these: "No checkable claims were found in this text."
+
+  # Factual signals. Shown only when the content kind allows them.
+  # `invert: true` means the signal shows when the answer is NO.
+  signals:
+    - id: pressure
+      label: "Pushes you to act now"
+      why: "The text leans on urgency, scarcity, or fear instead of reasons."
+      instructions:
+        question: "Does `text` push the reader to act quickly through urgency, scarcity, fear, or \"act now\" framing?"
+      criteria:
+        true:
+          what: "Deadlines, limited supply, threats of loss, or repeated calls to act immediately"
+          examples: ["Only 3 left.", "Act before it is too late.", "Offer ends tonight."]
+        false:
+          what: "The reader is given time and reasons, or no action is asked for"
+
+    - id: certainty_unsupported
+      label: "Very sure, shows no proof"
+      why: "Strong certainty with no source, data, or reasoning given."
+      instructions:
+        question: "Does `text` state things with strong certainty while giving no source, data, or reasoning for them?"
+      criteria:
+        true:
+          what: "Words like definitely, proven, everyone knows, or flat assertions with nothing backing them"
+          examples: ["This is proven to work.", "There is no doubt the plan failed."]
+        false:
+          what: "Claims are hedged, or a source, figure, or argument is given"
+
+    - id: numbers_unsourced
+      label: "Numbers with no source"
+      why: "Statistics or figures appear without saying where they came from."
+      instructions:
+        question: "Does `text` present statistics, percentages, or figures without saying where they come from?"
+      criteria:
+        true:
+          what: "Numbers presented as fact with no study, report, dataset, or person named as the origin"
+          examples: ["90 percent of users agree.", "Crime is up 300 percent."]
+        false:
+          what: "No figures, or each figure is tied to a named origin"
+
+    - id: contradiction
+      label: "Contradicts itself"
+      why: "Two parts of the text cannot both be true."
+      instructions:
+        question: "Does `text` contradict itself, stating two things that cannot both be true?"
+      criteria:
+        true:
+          what: "A claim and its opposite both appear, or numbers that do not agree"
+        false:
+          what: "The text is internally consistent, even if it is wrong about the world"
+
+    - id: cites_sources
+      invert: true
+      label: "Names no checkable source"
+      why: "No study, document, dataset, or named person is given that a reader could look up."
+      instructions:
+        question: "Does `text` name a checkable source such as a study, document, dataset, organization report, or identified person?"
+      criteria:
+        true:
+          what: "A specific, findable source is named or linked"
+          examples: ["According to the 2024 CDC report", "Reuters reported on Tuesday", "the paper in Nature"]
+        false:
+          what: "Only vague references such as experts, studies, or people are saying, or no source at all"
+
+    - id: ad_hominem_or_tribal
+      label: "Attacks people, not the point"
+      why: "The text goes after people or groups instead of addressing the claims."
+      instructions:
+        question: "Does `text` attack people or groups, or appeal to tribal identity, instead of addressing the claims at hand?"
+      criteria:
+        true:
+          what: "Insults, motives, or group labels used in place of engaging with what was said"
+          examples: ["Of course a lobbyist would say that.", "Only idiots believe this."]
+        false:
+          what: "Disagreement is about the claims themselves"
+
+  worth_deep_check:
+    instructions:
+      question: "Would fetching real sources help a reader judge `text`? Answer yes only if it contains specific claims about the world that a source could support or contradict."
+    criteria:
+      yes: "Contains at least one specific, checkable claim about the world"
+      no: "Nothing in it can be checked: opinion, fiction, instructions, a question, or too vague"
+      unsure: "Might contain a checkable claim but it is not clear"
+
+  manipulation_level:
+    instructions:
+      question: "Overall, how much is `text` built to steer the reader rather than inform them?"
+      note: "Judge technique, not truth. A true text can still lean on the reader."
+    criteria:
+      - summary: "Straightforward"
+        signals: ["States things plainly", "Gives sources or reasons", "No pressure on the reader"]
+      - summary: "Persuasive but fair"
+        signals: ["Argues for a position", "Uses reasons and evidence", "Acknowledges other views or limits"]
+      - summary: "Leans on you"
+        signals: ["Uses emotion, pressure, or omission to move the reader", "Skips the other side"]
+      - summary: "Built to mislead"
+        signals: ["Multiple techniques stacked", "Fabricated-feeling numbers or quotes", "Designed to stop the reader from checking"]
+    labels:
+      - "Straightforward"
+      - "Persuasive but fair"
+      - "Leans on you"
+      - "Built to mislead"
+
+  # Manipulation battery (PRD F8b). One noul per technique, all in the fast-lane call.
+  # `label` is for readers. `jargon` shows only in the expanded view.
+  techniques:
+    # Emotional pressure
+    - id: fear_appeal
+      family: emotional_pressure
+      label: "Tries to scare you"
+      jargon: "Fear appeal"
+      instructions: "Does `text` try to frighten the reader to move them toward a conclusion or action?"
+      criteria:
+        true: { what: "Threats, worst cases, or danger framed to push the reader", examples: ["If you don't act, you'll lose everything.", "This could be in your water right now."] }
+        false: { what: "Risk is described calmly with context, or no danger is invoked" }
+    - id: urgency
+      family: emotional_pressure
+      label: "Makes you feel you must act now"
+      jargon: "Urgency"
+      instructions: "Does `text` create time pressure so the reader acts before thinking?"
+      criteria:
+        true: { what: "Deadlines, countdowns, 'act now', 'before it's too late'", examples: ["Offer ends at midnight.", "You have 24 hours."] }
+        false: { what: "No time pressure, or a deadline stated as plain information" }
+    - id: scarcity
+      family: emotional_pressure
+      label: "Says there's almost none left"
+      jargon: "Scarcity"
+      instructions: "Does `text` claim limited supply or limited spots to push the reader?"
+      criteria:
+        true: { what: "Only a few left, limited seats, exclusive access used as pressure", examples: ["Only 2 seats remain.", "Limited to the first 100."] }
+        false: { what: "No scarcity claim, or availability stated neutrally" }
+    - id: outrage_bait
+      family: emotional_pressure
+      label: "Written to make you angry"
+      jargon: "Outrage bait"
+      instructions: "Is `text` written to provoke anger or disgust rather than to inform?"
+      criteria:
+        true: { what: "Inflammatory framing, villains, 'you won't believe', indignation as the main content", examples: ["They think you're too stupid to notice.", "This is an outrage and they know it."] }
+        false: { what: "Even-toned, or anger is incidental to a factual account" }
+    - id: guilt
+      family: emotional_pressure
+      label: "Makes you feel guilty"
+      jargon: "Guilt appeal"
+      instructions: "Does `text` use guilt or shame to move the reader?"
+      criteria:
+        true: { what: "Implies the reader is bad, selfish, or complicit if they do not agree or act", examples: ["A real parent would never risk this.", "Every day you wait, someone suffers."] }
+        false: { what: "No appeal to the reader's guilt or shame" }
+
+    # Faulty reasoning
+    - id: false_dilemma
+      family: faulty_reasoning
+      label: "Pretends there are only two options"
+      jargon: "False dilemma"
+      instructions: "Does `text` present only two options when more clearly exist?"
+      criteria:
+        true: { what: "Either/or framing that hides alternatives", examples: ["Either we ban it or we accept the deaths.", "You're with us or against us."] }
+        false: { what: "Options are presented fairly, or no choice is framed" }
+    - id: strawman
+      family: faulty_reasoning
+      label: "Argues against a made-up version of the other side"
+      jargon: "Strawman"
+      instructions: "Does `text` misstate an opposing view to make it easier to attack?"
+      criteria:
+        true: { what: "Exaggerated or distorted version of what opponents say, then knocked down", examples: ["So they want everyone to just stop driving?"] }
+        false: { what: "Opposing views are stated accurately or not stated" }
+    - id: slippery_slope
+      family: faulty_reasoning
+      label: "Claims one step leads to disaster"
+      jargon: "Slippery slope"
+      instructions: "Does `text` claim that one step will inevitably lead to an extreme outcome without showing why?"
+      criteria:
+        true: { what: "A chain of consequences asserted with no support for the links", examples: ["First they take this, next they take everything."] }
+        false: { what: "Consequences are argued with reasons, or none are claimed" }
+    - id: correlation_as_causation
+      family: faulty_reasoning
+      label: "Treats 'happened together' as 'caused'"
+      jargon: "Correlation presented as causation"
+      instructions: "Does `text` treat two things that happen together as one causing the other, without evidence of cause?"
+      criteria:
+        true: { what: "Since X, Y rose, so X caused Y", examples: ["Since the law passed, crime went up. The law caused it."] }
+        false: { what: "Cause is supported by evidence, or only correlation is claimed" }
+    - id: cherry_pick
+      family: faulty_reasoning
+      label: "Picks the one example that fits"
+      jargon: "Cherry-picking"
+      instructions: "Does `text` rely on a single striking example or a selected subset while ignoring the broader picture?"
+      criteria:
+        true: { what: "One anecdote or a favorable slice treated as the whole story", examples: ["My uncle smoked and lived to 95."] }
+        false: { what: "Examples are representative or the limits are acknowledged" }
+    - id: whataboutism
+      family: faulty_reasoning
+      label: "Changes the subject to someone else's fault"
+      jargon: "Whataboutism"
+      instructions: "Does `text` deflect a criticism by pointing at someone else's wrongdoing instead of answering it?"
+      criteria:
+        true: { what: "'But what about...' used to avoid the point", examples: ["Why talk about this when the other party did worse?"] }
+        false: { what: "The criticism is answered, or comparisons are made fairly" }
+
+    # Authority and crowd
+    - id: unnamed_experts
+      family: authority_and_crowd
+      label: "Leans on experts it won't name"
+      jargon: "Appeal to unnamed authority"
+      instructions: "Does `text` cite experts, scientists, doctors, or studies without naming any?"
+      criteria:
+        true: { what: "'Experts say', 'studies show', 'doctors agree' with no name or link", examples: ["Experts agree this is the best method."] }
+        false: { what: "Authorities are named or none are invoked" }
+    - id: bandwagon
+      family: authority_and_crowd
+      label: "Says everyone's doing it"
+      jargon: "Bandwagon"
+      instructions: "Does `text` argue that something is right or true because many people believe or do it?"
+      criteria:
+        true: { what: "Popularity used as proof", examples: ["Millions can't be wrong.", "Everyone knows this."] }
+        false: { what: "Popularity is not used as an argument" }
+    - id: fake_social_proof
+      family: authority_and_crowd
+      label: "Shows crowds or reviews you can't check"
+      jargon: "Fake social proof"
+      instructions: "Does `text` use testimonials, review counts, or follower numbers that cannot be verified as evidence?"
+      criteria:
+        true: { what: "Unverifiable claims of user counts, ratings, or praise", examples: ["Rated 5 stars by 10,000 happy customers."] }
+        false: { what: "No social proof, or it is attributed to a checkable place" }
+
+    # Numbers games
+    - id: relative_without_absolute
+      family: numbers_games
+      label: "Gives a percent change but not the real numbers"
+      jargon: "Relative risk without absolute risk"
+      instructions: "Does `text` give a relative change (percent up or down, times more likely) without the underlying absolute numbers?"
+      criteria:
+        true: { what: "'Doubles your risk' or '50 percent more' with no base figure", examples: ["Doubles your risk of the disease."] }
+        false: { what: "Absolute numbers are given, or no relative figure appears" }
+    - id: missing_base_rate
+      family: numbers_games
+      label: "Big number, no comparison"
+      jargon: "Missing base rate"
+      instructions: "Does `text` present a count or figure that sounds large without the comparison needed to judge it?"
+      criteria:
+        true: { what: "A raw number with no denominator, baseline, or comparison", examples: ["Over 5,000 incidents were reported."] }
+        false: { what: "Figures are put in context, or no figure appears" }
+    - id: cropped_window
+      family: numbers_games
+      label: "Picks a convenient time window"
+      jargon: "Cropped time window"
+      instructions: "Does `text` choose an unusual start or end date that makes a trend look bigger or smaller?"
+      criteria:
+        true: { what: "Trend measured from a suspicious starting point", examples: ["Since March 2020, the economy has grown 30 percent."] }
+        false: { what: "Time windows are standard or explained" }
+    - id: percent_of_unknown
+      family: numbers_games
+      label: "Percent of what?"
+      jargon: "Percent of an unknown total"
+      instructions: "Does `text` give a percentage without saying what it is a percentage of?"
+      criteria:
+        true: { what: "A percent with no stated population or total", examples: ["80 percent said yes."] }
+        false: { what: "The base of each percentage is clear, or none appear" }
+    - id: suspicious_precision
+      family: numbers_games
+      label: "Oddly exact numbers with no source"
+      jargon: "Suspicious precision"
+      instructions: "Does `text` give oddly precise figures that no source is given for?"
+      criteria:
+        true: { what: "Numbers like 73.4 percent or 1,287 cases with no origin, suggesting invention", examples: ["Exactly 93.7 percent of people prefer it."] }
+        false: { what: "Precision matches a stated source, or figures are round and hedged" }
+
+    # Framing
+    - id: loaded_language
+      family: framing
+      label: "Uses charged words instead of arguments"
+      jargon: "Loaded language"
+      instructions: "Does `text` rely on emotionally charged words to carry its point rather than reasons?"
+      criteria:
+        true: { what: "Terms chosen to trigger reaction: regime, thug, scheme, hero, poison", examples: ["The regime's latest scheme."] }
+        false: { what: "Neutral wording, or strong words backed by specifics" }
+    - id: euphemism
+      family: framing
+      label: "Softens something to hide it"
+      jargon: "Euphemism"
+      instructions: "Does `text` use soft or vague wording to obscure something harmful or unpleasant?"
+      criteria:
+        true: { what: "Wording that hides what happened", examples: ["Collateral adjustments to the workforce.", "Enhanced procedures."] }
+        false: { what: "Plain wording for plain facts" }
+    - id: leading_question
+      family: framing
+      label: "Asks a question that assumes the answer"
+      jargon: "Leading question"
+      instructions: "Does `text` use questions that assume a conclusion the reader has not been shown?"
+      criteria:
+        true: { what: "Rhetorical or loaded questions with a built-in answer", examples: ["Why is the government hiding this from you?"] }
+        false: { what: "Questions are open, or no questions appear" }
+    - id: buried_counterpoint
+      family: framing
+      label: "Mentions the other side, then buries it"
+      jargon: "Buried counterpoint"
+      instructions: "Does `text` acknowledge an opposing point only to dismiss it without engaging?"
+      criteria:
+        true: { what: "A one-line nod to the other side followed by dismissal", examples: ["Some claim otherwise, but they are wrong."] }
+        false: { what: "Opposing points are engaged, or none are raised" }
+    - id: motte_and_bailey
+      family: framing
+      label: "Swaps a bold claim for a safe one when pushed"
+      jargon: "Motte and bailey"
+      instructions: "Does `text` make a bold claim and then, when defending it, retreat to a much milder one as if they were the same?"
+      criteria:
+        true: { what: "A sweeping claim defended by a modest one", examples: ["It cures cancer. Well, it supports the body's healing."] }
+        false: { what: "Claims are consistent in scope" }
+
+    # Commercial and dark patterns
+    - id: hidden_cost
+      family: commercial_and_dark_patterns
+      label: "Hides what it really costs"
+      jargon: "Hidden cost"
+      instructions: "Does `text` advertise a price or a 'free' offer while hiding fees, renewals, or conditions?"
+      criteria:
+        true: { what: "Free trial that converts, price without fees, asterisks that change the deal", examples: ["Free for 7 days*", "Just $9.99 (billed annually)"] }
+        false: { what: "Costs are stated plainly or no offer is made" }
+    - id: fake_countdown
+      family: commercial_and_dark_patterns
+      label: "Countdown or deadline that looks invented"
+      jargon: "Fake countdown"
+      instructions: "Does `text` use a countdown, deadline, or 'sale ends' device that appears manufactured to pressure the reader?"
+      criteria:
+        true: { what: "Timers and deadlines with no real reason given", examples: ["Sale ends in 04:59!"] }
+        false: { what: "No countdown, or a deadline with a stated real reason" }
+    - id: undisclosed_sponsorship
+      family: commercial_and_dark_patterns
+      label: "Sounds like a review, reads like an ad"
+      jargon: "Undisclosed sponsorship or affiliate intent"
+      instructions: "Does `text` promote a product or service in a way that suggests a commercial interest that is not disclosed?"
+      criteria:
+        true: { what: "Enthusiastic recommendation with purchase links or codes and no disclosure", examples: ["Use my code SAVE20 at checkout, you'll love it."] }
+        false: { what: "Sponsorship is disclosed or no product is pushed" }
+    - id: anonymous_testimonial
+      family: commercial_and_dark_patterns
+      label: "Quotes a customer nobody can find"
+      jargon: "Anonymous testimonial"
+      instructions: "Does `text` use a testimonial from a person who cannot be identified?"
+      criteria:
+        true: { what: "Praise attributed to a first name, initials, or 'a customer'", examples: ["\"Changed my life!\" - Sarah K."] }
+        false: { what: "No testimonials, or the person is identifiable" }
+
+    # Source games
+    - id: unsourced_quote
+      family: source_games
+      label: "Quotes someone without saying where"
+      jargon: "Unsourced quote"
+      instructions: "Does `text` quote a person or document without saying where or when it was said?"
+      criteria:
+        true: { what: "Quotation marks attributed to a named person with no source, date, or link", examples: ["The senator said, \"We never intended to keep the promise.\""] }
+        false: { what: "Quotes are sourced, or none appear" }
+    - id: screenshot_of_screenshot
+      family: source_games
+      label: "Passes along a screenshot as proof"
+      jargon: "Screenshot as evidence"
+      instructions: "Does `text` rely on a screenshot, a forwarded message, or a repost as proof of what someone said or did?"
+      criteria:
+        true: { what: "Evidence is a screenshot or forward that cannot be traced to its origin", examples: ["Look at this screenshot of what they posted."] }
+        false: { what: "Evidence is linked to its origin, or no such evidence is used" }
+    - id: leak_without_provenance
+      family: source_games
+      label: "Calls it leaked but can't say from where"
+      jargon: "Leak without provenance"
+      instructions: "Does `text` describe information as leaked, insider, or secret without any account of where it came from?"
+      criteria:
+        true: { what: "'Leaked documents', 'an insider told me' with no verifiable trail", examples: ["Leaked memo reveals the real plan."] }
+        false: { what: "Provenance is given, or nothing is described as leaked" }
+    - id: altered_headline
+      family: source_games
+      label: "Headline says more than the text does"
+      jargon: "Altered or overstated headline"
+      instructions: "Does the headline or opening line of `text` claim more than the body of the text supports?"
+      criteria:
+        true: { what: "A headline that goes beyond, or contradicts, what the body says", examples: ["Headline: 'Vaccine causes deaths'. Body: 'no causal link was found'."] }
+        false: { what: "Headline matches the body, or there is no headline" }
+
+# Second small call: pick the sentence that best shows each detected technique.
+# One Choice per technique over the numbered sentence list, with a none option.
+example_pick:
+  instructions:
+    question: "Which numbered sentence in `sentences` best shows the technique described in `technique`? Pick `none` if no single sentence shows it."
+  none_label: none
+
+deep_lane:
+  claim_checkable:
+    instructions:
+      question: "Can `claim.text` be checked against sources? It must assert something specific about the world that a document, dataset, or report could support or contradict."
+    criteria:
+      true: { what: "Specific and falsifiable", examples: ["Unemployment fell to 3.9 percent in May 2025.", "The bridge opened in 1932."] }
+      false: { what: "Opinion, prediction, value judgment, or too vague to check", examples: ["This is a disaster.", "Things will get worse."] }
+  claim_central:
+    instructions:
+      question: "Is `claim.text` central to what `text` is arguing or reporting, rather than an incidental detail?"
+    criteria:
+      true: { what: "The text's point depends on it" }
+      false: { what: "Background or passing detail; the text would stand without it" }
+  claim_quote_faithful:
+    instructions:
+      question: "Does `claim.text` faithfully restate what `claim.quote` says, without adding or changing meaning?"
+    criteria:
+      true: { what: "Same meaning, possibly reworded" }
+      false: { what: "Adds, drops, or changes something the quote says" }
+
+  passage_relevance:
+    instructions:
+      question: "How relevant is the numbered passage to deciding whether `claim` is true?"
+    criteria:
+      - "Unrelated or about a different subject"
+      - "Same topic but does not bear on the claim"
+      - "Bears on the claim indirectly or partially"
+      - "Directly addresses what the claim asserts"
+
+  relation:
+    instructions:
+      question: "How does `passage` relate to `claim`?"
+      note: "Judge only what the passage says. Do not use outside knowledge."
+    criteria:
+      supports: "The passage states the claim or directly implies it is true"
+      contradicts: "The passage states the opposite of the claim or implies it is false"
+      says_nothing: "The passage does not address what the claim asserts, either way"
+
+  explanation_sentence_check:
+    instructions:
+      question: "Is `sentence` fully backed by the `passages` shown, without adding facts that are not in them?"
+      note: "A sentence that only reports a verdict count or says evidence was not found counts as backed if `verdicts` says so."
+    criteria:
+      true: { what: "Everything in the sentence is in the passages or verdicts" }
+      false: { what: "The sentence adds a fact, number, name, or cause not present in the passages or verdicts" }
+
+  answer_sentence_check:
+    instructions:
+      question: "Is `sentence` fully backed by the `passages` shown, without adding facts that are not in them?"
+    criteria:
+      true: { what: "Everything in the sentence is in the passages" }
+      false: { what: "The sentence adds a fact, number, name, or cause not present in the passages" }
+
+# Verdict copy. Plain and literal. No jokes here, ever (PRD 10c).
+verdicts:
+  supported:
+    label: "Supported"
+    why: "A fetched source supports this and none contradict it."
+  contradicted:
+    label: "Contradicted"
+    why: "A fetched source contradicts this."
+  fabricated_quote:
+    label: "Quote not in source"
+    why: "The text quotes a source, and the quote is not in that source."
+  mixed:
+    label: "Mixed"
+    why: "Sources found, but support is weak or they disagree."
+  unsupported:
+    label: "Unsupported"
+    why: "Sources were fetched, but none address this claim."
+  unsure:
+    label: "Unsure"
+  not_checkable:
+    label: "Not checkable"
+    why: "This is an opinion, prediction, or too vague to check against a source."
+  incidental:
+    label: "Not checked"
+    why: "A passing detail; not fetched for."
+  confidence_bands:
+    strong: "Strong evidence"
+    some: "Some evidence"
+    none: "Can't tell"
+  unsure_reasons:
+    no_source_found: "No source found."
+    fetch_failed: "Sources could not be fetched."
+    paywalled: "Source is paywalled or blocked."
+    off_topic: "Evidence found was off-topic."
+    low_confidence: "Evidence found, but the judgment was not confident."
+    no_search_key: "No search key configured, and the text cites no sources."
+    offline: "Offline. Nothing was fetched."
+    over_cap: "Not fetched: over the per-check claim cap."

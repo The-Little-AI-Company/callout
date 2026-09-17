@@ -1,0 +1,87 @@
+# Callout line bank (PRD 10c).
+#
+# Jokes live here and only here. Tagged by surface. Lines are picked at random
+# per surface. Rules for adding a line:
+#   - Aim at the text being checked, at manipulation techniques, or at the
+#     mascot. Never at the reader.
+#   - Never imply a verdict the engine did not produce. "Sniffing" is fine.
+#     "Looks fake" is not.
+#   - Keep it under about 60 characters so it fits the popover.
+#
+# Surfaces that must stay literal and never draw from this file: verdict
+# labels, the one-line why, evidence, confidence bands, unsure reasons.
+
+empty:
+  - "Highlight something suspicious and hit the key. I'll bring the receipts."
+  - "Point me at a paragraph. I read the fine print for fun."
+  - "Nothing here yet. Select some text, press the hotkey, and I'll sniff it."
+  - "Plushy and I are ready. Feed us a suspicious paragraph."
+
+loading_fast:
+  - "Sniffing for hogwash."
+  - "Reading the shape of it."
+  - "Checking who's pushing and how hard."
+  - "Counting the adjectives."
+
+loading_deep:
+  - "Reading the fine print so you don't have to."
+  - "Checking who actually said that."
+  - "Knocking on the sources' doors."
+  - "Fetching receipts. Real ones."
+  - "Plushy is holding the flashlight. Give me a second."
+
+deep_waiting:
+  - "There's something checkable in here. Want me to go get the sources?"
+  - "I can chase the claims down if you want. Press Check claims."
+
+all_unsure:
+  - "I couldn't pin any of this down. That's a finding, not a shrug."
+  - "No good sources turned up. I'd rather say so than guess."
+  - "Nothing I could confirm or knock down. Honest gray."
+
+error_network:
+  - "Can't reach the internet. Plushy tried unplugging and plugging it back in."
+  - "The network is not answering. I'll wait here with my ears down."
+
+error_key:
+  - "That key didn't open the door. Check it in settings."
+  - "The API said no. Usually that's a typo in the key."
+
+error_generic:
+  - "Something fell over. Not the plushy this time."
+  - "That didn't work. Try again, or check settings if it keeps happening."
+
+offline:
+  - "Offline. I can still read the shape of text I've already seen, but no sources today."
+  - "No internet. Fast lane only, and only from memory."
+
+too_short:
+  - "That's barely a sentence. Give me a little more to chew on."
+
+too_long:
+  - "That's a whole book. I trimmed it to the first part."
+
+helper_off_input:
+  - "Paste text to check. Questions need the helper turned on in settings."
+
+screenshot_no_helper:
+  - "I can't read pictures on my own. Turn on the helper in settings for screenshots."
+
+settings_intro:
+  - "Three keys, your own. Text you check goes to these three services and the pages I fetch. Nowhere else."
+  - "Bring your own keys. I don't run a server, so I couldn't spy on you if I wanted to."
+
+settings_history:
+  - "History is off. Nothing is saved unless you flip this on."
+
+feedback_copied:
+  - "Report copied. Paste it into the feedback form. No checked text included unless you ticked the box."
+
+waitlist:
+  - "Wave one is full. You're on the list, and you'll hear from us when wave two opens."
+
+signup_confirm_subject:
+  - "You're in the Callout beta queue"
+
+release_notes_tagline:
+  - "Now with fewer bugs and the same amount of plushy."

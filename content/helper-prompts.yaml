@@ -1,0 +1,89 @@
+# Prompts for the LLM helper. The helper extracts, transcribes, writes queries,
+# and explains. It never judges and never sees the verdict logic. Keep the
+# "may not introduce facts" rules; Jev checks every sentence anyway.
+
+extract_claims:
+  system: |
+    You extract checkable claims from text. Return JSON only.
+    A claim is atomic (one assertion), specific, and checkable against a
+    document, dataset, or report. Skip opinions, predictions, and vague
+    statements. For each claim give the EXACT quote from the text it comes
+    from, copied character for character, including the original wording.
+    If the text attributes a quote to a named source, put the quoted words in
+    attributed_quote. If the text links or names a URL for a claim, put it in
+    cited_url. Order claims by how central they are to the text.
+    Output: {"claims":[{"text":"...","quote":"...","attributed_quote":"...or null","cited_url":"...or null"}]}
+    Return at most {{max_claims}} claims.
+  user: |
+    TEXT:
+    {{text}}
+
+write_queries:
+  system: |
+    You write web search queries that would find evidence for or against a
+    claim. Return JSON only: {"queries":["...","..."]}. Write at most
+    {{max_queries}} short, neutral queries. Do not include the answer in the
+    query. Prefer queries that would surface primary sources, official data,
+    or reputable news.
+  user: |
+    CLAIM: {{claim}}
+    CONTEXT (surrounding text, for names and dates only): {{context}}
+
+explain:
+  system: |
+    You write a short summary of claim checks for an everyday reader.
+    Rules, in order of importance:
+    1. Use ONLY the verdicts and the passages given. Do not add any fact,
+       number, name, or cause that is not in them.
+    2. Write exactly two sentences. Plain words. No jokes.
+    3. Do not say a claim is true or false; say "supported", "contradicted",
+       "unsupported", or "unsure", matching the verdict given.
+    4. If nothing was supported or contradicted, say that plainly.
+    Return JSON only: {"sentences":["...","..."]}
+  user: |
+    VERDICTS:
+    {{verdicts}}
+
+    PASSAGES:
+    {{passages}}
+
+answer_question:
+  system: |
+    You answer a reader's question using ONLY the passages given. If the
+    passages do not answer it, say so in one sentence. Do not add facts,
+    numbers, names, or causes that are not in the passages. Two to four short
+    sentences. No jokes. Return JSON only: {"sentences":["..."]}
+  user: |
+    QUESTION: {{question}}
+
+    PASSAGES:
+    {{passages}}
+
+clean_paste:
+  system: |
+    The text below is a messy paste: a chat log, a forwarded email, a comment
+    thread, or similar. Extract the substantive statements and who made them.
+    Drop greetings, signatures, quoted headers, and formatting noise. Keep the
+    original wording of each statement. Return JSON only:
+    {"items":[{"speaker":"...or null","text":"..."}]}
+  user: |
+    {{text}}
+
+transcribe_image:
+  system: |
+    Transcribe all text visible in the image exactly, preserving reading order.
+    If the image contains a chart, table, or picture that carries a claim,
+    describe it in one neutral sentence in square brackets, for example
+    [Chart: bar chart labelled "Sales 2023" with bars for Q1 to Q4]. Do not
+    interpret, judge, or summarize. Return JSON only: {"text":"..."}
+  user: |
+    Transcribe this image.
+
+transcribe_video_frames:
+  system: |
+    These are frames sampled from a video, in order. Transcribe any on-screen
+    text and captions exactly. Describe visual claims in one neutral sentence
+    each in square brackets. Do not interpret or judge. Return JSON only:
+    {"text":"..."}
+  user: |
+    Transcribe these frames.

@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Callout: an honest read on what you're reading</title>
+    <meta name="description" content="Press a hotkey over anything you are reading. Callout tells you whether it is trying to fool you and whether its claims hold up against real sources, without making things up." />
+    <meta property="og:title" content="Callout" />
+    <meta property="og:description" content="Signals in the text itself. Not a truth check. Then the receipts." />
+    <meta property="og:image" content="/assets/og-image.png" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header class="hero">
+      <img class="mascot" src="/assets/mascot-full.png" alt="" onerror="this.src='/assets/placeholder-mascot.svg'" />
+      <div>
+        <h1>Callout</h1>
+        <p class="tag">Press a key over anything you're reading. Get an honest read on whether it's trying to fool you, and whether its claims hold up against real sources.</p>
+        <p class="sub">Windows tray app. Private beta. Bring your own keys.</p>
+        <a class="cta" href="#signup">Join the beta</a>
+      </div>
+    </header>
+
+    <main>
+      <section>
+        <h2>Two lanes, one keypress</h2>
+        <div class="cols">
+          <div class="card">
+            <h3>Fast lane, under a second</h3>
+            <p>What the text's own shape says: pushes urgency, big numbers with no source, contradicts itself, attacks people instead of the point. Plus how it's trying to persuade you: fear, false dilemmas, unnamed experts, fake countdowns, and thirty other techniques, each with the sentence that shows it.</p>
+            <p class="honest">Header on every result: <em>Signals in the text itself. Not a truth check.</em></p>
+          </div>
+          <div class="card">
+            <h3>Deep lane, a few seconds</h3>
+            <p>Each specific claim gets a traffic light and a one-line why. Green needs a fetched source that supports it and none that contradict. Red needs a contradicting source or a quote that isn't in the source it cites. Gray means unsure, and it says what was missing.</p>
+            <p class="honest">Every verdict comes with the passage and the link. No source, no verdict.</p>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h2>The honesty promise</h2>
+        <ul class="promise">
+          <li>No verdict without a shown source. No "false" without a contradicting source or a fabricated quote.</li>
+          <li>Unsure is a first-class answer, and every unsure names its reason.</li>
+          <li>The AI helper never judges. It extracts, transcribes, and writes summaries, and every sentence it writes is checked against the sources before you see it.</li>
+          <li>Confidence in words, never numbers. Jokes in the loading screen, never in a verdict.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Your keys, your machine</h2>
+        <p>Callout has no server and no account. You add three API keys once: <a href="https://typesafe.ai">TypeSafe</a> for judgment (required), <a href="https://tavily.com">Tavily</a> for web search, and an LLM provider for the helper (DeepSeek by default). Keys sit in the Windows credential store. Text you check goes only to those services and to the pages Callout fetches for evidence. It never reaches us.</p>
+      </section>
+
+      <section>
+        <h2>Demo</h2>
+        <div class="demo">
+          <video controls muted playsinline poster="/assets/og-image.png" src="/assets/demo.mp4">Demo capture coming with the first beta build.</video>
+        </div>
+      </section>
+
+      <section id="signup">
+        <h2>Join wave one</h2>
+        <p>Twenty testers in the first wave. After that you go on the waitlist and we invite in order.</p>
+        <form id="signup-form" class="card form">
+          <label>Email <input type="email" name="email" required autocomplete="email" /></label>
+          <label>Operating system
+            <select name="os" required>
+              <option value="windows">Windows 10 or 11</option>
+              <option value="mac">Mac (later)</option>
+              <option value="linux">Linux (no commitment)</option>
+            </select>
+          </label>
+          <fieldset>
+            <legend>What do you mostly read?</legend>
+            <label><input type="checkbox" name="reads" value="news" /> News</label>
+            <label><input type="checkbox" name="reads" value="social" /> Social posts</label>
+            <label><input type="checkbox" name="reads" value="ads" /> Product pages and ads</label>
+            <label><input type="checkbox" name="reads" value="chat" /> Chat and email</label>
+            <label><input type="checkbox" name="reads" value="docs" /> PDFs and documents</label>
+            <label><input type="checkbox" name="reads" value="video" /> Video captions</label>
+          </fieldset>
+          <label class="consent"><input type="checkbox" name="consent" required /> You can email me about the beta. Nothing else.</label>
+          <button type="submit">Sign up</button>
+          <p class="status" id="signup-status" role="status"></p>
+        </form>
+      </section>
+    </main>
+
+    <footer>
+      <p>A joint product of the little ai company and Wazoo. Open source, MIT. <a href="https://github.com/little-ai-company/callout">Source</a>.</p>
+      <p class="tiny">Brand and spelling pending partner approval. The green plushy is an original design.</p>
+    </footer>
+
+    <script>
+      const form = document.getElementById("signup-form");
+      const status = document.getElementById("signup-status");
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        status.textContent = "Sending.";
+        const data = new FormData(form);
+        const body = {
+          email: data.get("email"),
+          os: data.get("os"),
+          reads: data.getAll("reads"),
+          consent: data.get("consent") === "on",
+        };
+        try {
+          const res = await fetch("/api/signup", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
+          const json = await res.json();
+          status.textContent = json.message || (res.ok ? "You're in. Check your inbox." : "Something went wrong.");
+          if (res.ok) form.querySelector("button").disabled = true;
+        } catch {
+          status.textContent = "Could not reach the signup service. Try again in a minute.";
+        }
+      });
+    </script>
+  </body>
+</html>
