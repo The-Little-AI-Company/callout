@@ -55,7 +55,7 @@ TYPESAFE_API_KEY=... TAVILY_API_KEY=... DEEPSEEK_API_KEY=... npm run eval:sample
 
 Windows is the only shipping target in v1. The engine and UI build and test
 on any OS; the Rust shell type-checks on Linux with
-`cargo check --target x86_64-pc-windows-msvc` and is built for real by the
+`cargo check --target x86_64-pc-windows-gnu` (needs mingw-w64) and is built for real by the
 Windows CI job.
 
 ## Privacy

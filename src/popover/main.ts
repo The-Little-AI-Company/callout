@@ -333,18 +333,22 @@ function evidence(c: ClaimVerdict): Node {
   return h("div", { class: "evidence" }, ...parts);
 }
 
+// The input box is created once so typed text survives re-renders.
+const inputEl = h("input", { type: "text", "aria-label": "Paste text or a URL to check" });
+inputEl.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") submitInput();
+});
+function submitInput(): void {
+  const v = inputEl.value;
+  inputEl.value = "";
+  void onInput(v);
+}
 function inputBox(): Node {
   const helperOn = !!engine?.llm;
   const placeholder = helperOn && state.deep.status === "done" ? "Paste text or a URL, or ask about what's on screen" : "Paste text or a URL to check";
-  const input = h("input", { type: "text", placeholder, "aria-label": placeholder });
-  input.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") {
-      const v = input.value;
-      input.value = "";
-      void onInput(v);
-    }
-  });
-  return h("div", { class: "inputbox" }, input, h("button", { class: "btn", onClick: () => { const v = input.value; input.value = ""; void onInput(v); } }, "Check"));
+  inputEl.placeholder = placeholder;
+  inputEl.setAttribute("aria-label", placeholder);
+  return h("div", { class: "inputbox" }, inputEl, h("button", { class: "btn", onClick: submitInput }, "Check"));
 }
 
 // ---------------------------------------------------------------------------

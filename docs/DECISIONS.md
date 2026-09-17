@@ -17,7 +17,7 @@ module (robotjs or nut.js) for the synthetic keypress, which is the part that
 most often breaks on Windows updates. Frontend is plain TypeScript with Vite
 and no UI framework: the popover is one column and a few dozen DOM nodes.
 
-Verified with `cargo check --target x86_64-pc-windows-msvc` from Linux. A real
+Verified with `cargo check --target x86_64-pc-windows-gnu` from Linux (the msvc target needs `lib.exe`, which only exists on Windows; the gnu target works with `apt install mingw-w64`). Zero warnings. A real
 Windows build and the hotkey acceptance test run on a Windows machine or the
 GitHub Actions Windows runner (`.github/workflows/build.yml`).
 
