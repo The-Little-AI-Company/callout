@@ -1,6 +1,6 @@
 {
   "name": "callout",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "Press a hotkey over anything you are reading and get an honest read on whether it is trying to fool you and whether its claims hold up.",
   "license": "MIT",

@@ -1,28 +1,37 @@
-# Callout landing page and signup
+# Callout site
 
-Static page plus one serverless function (PRD 10a). Hosted by the little ai
-company. Deploys as-is to Vercel (`vercel --cwd site`) or any host that runs
-Node functions under `api/`.
+Static page hosted on GitHub Pages at
+https://the-little-ai-company.github.io/callout/ from the `site/` folder.
+`.github/workflows/pages.yml` deploys it on every push to `main` that touches
+`site/`. No build step: edit `index.html` and `styles.css` and push.
 
-Environment for the signup function:
+The download button links to
+`https://github.com/The-Little-AI-Company/callout/releases/latest/download/Callout-Setup.exe`,
+a stable name the release workflow publishes on every `v*` tag. The page also
+reads the GitHub releases API to show the version and date.
 
-| Variable | Meaning |
-|---|---|
-| `RESEND_API_KEY` | Resend API key |
-| `RESEND_AUDIENCE_ID` | The audience that is the beta roster |
-| `SIGNUP_FROM` | Sender, e.g. `Callout <beta@yourdomain>` (domain verified in Resend) |
-| `SIGNUP_INBOX` | Shared partner inbox that gets a copy of every signup |
-| `SIGNUP_CAP` | Wave-one cap, default 20 |
+Style follows the Vivary site system (warm dark ground, thin rules, amber for
+the record, lime for the one action) with different faces: Bricolage
+Grotesque for display, Fraunces italic for the mascot's voice, IBM Plex Mono
+for body and record.
 
-Wave logic (L3a): contacts tagged `wave1` in `first_name` count toward the
-cap. Signup 21 and later are tagged `waitlist`, get the waitlist message, and
-still receive a confirmation. Export the roster from Resend when inviting.
-
-Nothing is published until both partners approve the copy and the brand
-treatment. Asset paths under `assets/` are listed in `docs/ASSETS.md`.
-
-Local test of the validator:
+## Publishing a release
 
 ```sh
-node --input-type=module -e "import('./api/signup.ts')" # needs a TS loader; see test/site.test.ts instead
+git tag v0.2.0
+git push origin v0.2.0
 ```
+
+The `build` workflow tests, builds the Windows installer, and creates the
+GitHub Release with `Callout-Setup.exe` and `Callout.msi` attached.
+
+## Beta signup (optional)
+
+`api/signup.ts` is a Resend-backed serverless signup handler from the private
+beta plan (PRD 10a), written for Vercel-style hosting. GitHub Pages cannot run
+it, and the app is public now, so the page links to GitHub Releases and Issues
+instead. Keep the function if a waitlist is wanted later; its environment is
+documented in the file header and in `.env.example`.
+
+Assets under `assets/` are listed in `docs/ASSETS.md`. Until the partners'
+art lands, `placeholder-mascot.svg` stands in.

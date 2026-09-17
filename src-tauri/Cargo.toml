@@ -1,6 +1,6 @@
 [package]
 name = "callout"
-version = "0.1.0"
+version = "0.2.0"
 description = "Press a hotkey over anything you are reading and get an honest read on it."
 authors = ["the little ai company", "Wazoo"]
 license = "MIT"

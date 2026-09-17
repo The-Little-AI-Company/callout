@@ -270,7 +270,7 @@ function render(): void {
       h("h2", {}, "Feedback"),
       h("label", { class: "toggle" }, includeText, " Include checked text in the report"),
       h("p", { class: "small muted" }, "The report has verdict counts, usage, and this build number. Paste it into the feedback form."),
-      h("p", { class: "small muted" }, `Build ${build.version} (${build.build}) on ${build.platform}.`),
+      h("p", { class: "small muted" }, `Version ${build.version}, build ${build.build}, ${build.platform}. `, h("a", { href: "#", onClick: (e) => { e.preventDefault(); void openUrl("https://github.com/The-Little-AI-Company/callout/releases/latest"); } }, "Check for a newer version")),
     ),
   );
   void usageTable().then((node) => {

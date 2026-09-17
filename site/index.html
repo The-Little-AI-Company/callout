@@ -3,119 +3,173 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Callout: an honest read on what you're reading</title>
-    <meta name="description" content="Press a hotkey over anything you are reading. Callout tells you whether it is trying to fool you and whether its claims hold up against real sources, without making things up." />
+    <title>Callout. Press a key, get the receipts.</title>
+    <meta name="description" content="A Windows tray app. Highlight anything, press a key, and get an honest read on whether it is trying to fool you and whether its claims hold up against real sources. Open source, your own keys, no server." />
     <meta property="og:title" content="Callout" />
     <meta property="og:description" content="Signals in the text itself. Not a truth check. Then the receipts." />
-    <meta property="og:image" content="/assets/og-image.png" />
-    <meta name="color-scheme" content="light dark" />
-    <link rel="stylesheet" href="/styles.css" />
+    <meta property="og:image" content="assets/og-image.png" />
+    <link rel="icon" href="assets/placeholder-mascot.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Fraunces:ital,opsz,wght,SOFT,WONK@1,9..144,400,30,1&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <header class="hero">
-      <img class="mascot" src="/assets/mascot-full.png" alt="" onerror="this.src='/assets/placeholder-mascot.svg'" />
-      <div>
-        <h1>Callout</h1>
-        <p class="tag">Press a key over anything you're reading. Get an honest read on whether it's trying to fool you, and whether its claims hold up against real sources.</p>
-        <p class="sub">Windows tray app. Private beta. Bring your own keys.</p>
-        <a class="cta" href="#signup">Join the beta</a>
+    <header class="top">
+      <div class="wrap">
+        <a class="brand" href="#"><img src="assets/placeholder-mascot.svg" alt="" />Callout</a>
+        <nav>
+          <a href="#how">How it works</a>
+          <a href="#keys">Keys</a>
+          <a href="#download">Download</a>
+          <a href="https://github.com/The-Little-AI-Company/callout">Source</a>
+        </nav>
       </div>
     </header>
 
     <main>
-      <section>
-        <h2>Two lanes, one keypress</h2>
-        <div class="cols">
-          <div class="card">
-            <h3>Fast lane, under a second</h3>
-            <p>What the text's own shape says: pushes urgency, big numbers with no source, contradicts itself, attacks people instead of the point. Plus how it's trying to persuade you: fear, false dilemmas, unnamed experts, fake countdowns, and thirty other techniques, each with the sentence that shows it.</p>
-            <p class="honest">Header on every result: <em>Signals in the text itself. Not a truth check.</em></p>
+      <section class="hero in">
+        <div class="wrap">
+          <div class="hero-copy">
+            <h1 class="display display-xl reveal">Call out the BS.</h1>
+            <p class="voice reveal">Highlight something suspicious and hit the key. I'll bring the receipts.</p>
+            <p class="deck reveal">A small Windows tray app. Press one key over anything you are reading and get an honest read: what the text is doing to you, which of its claims hold up against real sources, and which are lies. Sources shown for every verdict. Unsure is a real answer.</p>
+            <div class="cta reveal">
+              <a class="btn btn-solid" id="dl-hero" href="https://github.com/The-Little-AI-Company/callout/releases/latest/download/Callout-Setup.exe">Download for Windows</a>
+              <a class="btn" href="https://github.com/The-Little-AI-Company/callout">View the source</a>
+            </div>
+            <dl class="kv reveal">
+              <div><dt>Version</dt><dd id="kv-version"><span>fetching the latest release</span></dd></div>
+              <div><dt>Platform</dt><dd>Windows 10 and 11 <span>· Mac later</span></dd></div>
+              <div><dt>Price</dt><dd>Free, MIT licensed <span>· bring your own API keys</span></dd></div>
+              <div><dt>Server</dt><dd>None <span>· nothing you check reaches us</span></dd></div>
+            </dl>
           </div>
-          <div class="card">
-            <h3>Deep lane, a few seconds</h3>
-            <p>Each specific claim gets a traffic light and a one-line why. Green needs a fetched source that supports it and none that contradict. Red needs a contradicting source or a quote that isn't in the source it cites. Gray means unsure, and it says what was missing.</p>
-            <p class="honest">Every verdict comes with the passage and the link. No source, no verdict.</p>
+          <div class="hero-art">
+            <img src="assets/mascot-full.png" alt="" onerror="this.onerror=null;this.src='assets/placeholder-mascot.svg'" />
           </div>
         </div>
       </section>
 
-      <section>
-        <h2>The honesty promise</h2>
-        <ul class="promise">
-          <li>No verdict without a shown source. No "false" without a contradicting source or a fabricated quote.</li>
-          <li>Unsure is a first-class answer, and every unsure names its reason.</li>
-          <li>The AI helper never judges. It extracts, transcribes, and writes summaries, and every sentence it writes is checked against the sources before you see it.</li>
-          <li>Confidence in words, never numbers. Jokes in the loading screen, never in a verdict.</li>
-        </ul>
-      </section>
+      <section class="sec" id="how">
+        <div class="wrap stack">
+          <div class="two">
+            <div class="lead">
+              <h2 class="display display-lg">Two lanes, one keypress.</h2>
+              <p class="lede">The fast lane reads the shape of the text in under a second. The deep lane fetches sources and checks each claim. A meter at the top says how much of it is BS, in words.</p>
+            </div>
+            <div class="body">
+              <figure class="mock" aria-label="Example result">
+                <span class="hdr">Signals in the text itself. Not a truth check.</span>
+                <span>Makes factual claims · Overall: <b>Built to mislead</b></span>
+                <span class="why">Tries to scare you · "If you don't act now, your children will never see a doctor again."</span>
+                <div class="meter"><span class="flame">▲</span><div class="bar"><i></i></div><b>Pants on fire</b></div>
+                <div class="row"><span class="dot red"></span><span>The Moon's orbit decayed 40 percent since January.<span class="why">Contradicted · A fetched source contradicts this. · nasa.gov</span></span></div>
+                <div class="row"><span class="dot hollow-red"></span><span>Governments urged coastal evacuations.<span class="why">Unsupported · Helper: Likely false (from general knowledge, no source fetched)</span></span></div>
+                <div class="row"><span class="dot green"></span><span>The Moon drifts away from Earth about 3.8 cm a year.<span class="why">Supported · A fetched source supports this. · nasa.gov</span></span></div>
+              </figure>
+            </div>
+          </div>
 
-      <section>
-        <h2>Your keys, your machine</h2>
-        <p>Callout has no server and no account. You add three API keys once: <a href="https://typesafe.ai">TypeSafe</a> for judgment (required), <a href="https://tavily.com">Tavily</a> for web search, and an LLM provider for the helper (DeepSeek by default). Keys sit in the Windows credential store. Text you check goes only to those services and to the pages Callout fetches for evidence. It never reaches us.</p>
-      </section>
-
-      <section>
-        <h2>Demo</h2>
-        <div class="demo">
-          <video controls muted playsinline poster="/assets/og-image.png" src="/assets/demo.mp4">Demo capture coming with the first beta build.</video>
+          <div class="cards">
+            <article class="card">
+              <div class="card-head"><h3>Fast lane</h3><span class="ord">01</span></div>
+              <p>Under a second. What the text's own shape says: pushes urgency, big numbers with no source, contradicts itself, attacks people instead of the point. Plus how it is trying to persuade you, from thirty-four techniques, each with the sentence that shows it.</p>
+              <p><span class="rec">Header on every result</span> Signals in the text itself. Not a truth check.</p>
+            </article>
+            <article class="card">
+              <div class="card-head"><h3>Deep lane</h3><span class="ord">02</span></div>
+              <p>A few seconds. Each claim gets a traffic light and a one-line why. Green needs a fetched source that supports it. Red needs a contradicting source, a quote missing from the source it cites, or a call from the helper's general knowledge, always labelled as such.</p>
+              <p><span class="rec">Every verdict</span> comes with the passage and the link.</p>
+            </article>
+            <article class="card">
+              <div class="card-head"><h3>BS meter</h3><span class="ord">03</span></div>
+              <p>Computed from the verdicts, never from vibes. Pants on fire with a flame when nearly all of it is false. Smoke when most of it is. A halo when it holds up. Mixed in between. Words on screen, never a percentage.</p>
+              <p><span class="rec">Write-up</span> two plain sentences, checked against the verdict list before you see them.</p>
+            </article>
+          </div>
         </div>
       </section>
 
-      <section id="signup">
-        <h2>Join wave one</h2>
-        <p>Twenty testers in the first wave. After that you go on the waitlist and we invite in order.</p>
-        <form id="signup-form" class="card form">
-          <label>Email <input type="email" name="email" required autocomplete="email" /></label>
-          <label>Operating system
-            <select name="os" required>
-              <option value="windows">Windows 10 or 11</option>
-              <option value="mac">Mac (later)</option>
-              <option value="linux">Linux (no commitment)</option>
-            </select>
-          </label>
-          <fieldset>
-            <legend>What do you mostly read?</legend>
-            <label><input type="checkbox" name="reads" value="news" /> News</label>
-            <label><input type="checkbox" name="reads" value="social" /> Social posts</label>
-            <label><input type="checkbox" name="reads" value="ads" /> Product pages and ads</label>
-            <label><input type="checkbox" name="reads" value="chat" /> Chat and email</label>
-            <label><input type="checkbox" name="reads" value="docs" /> PDFs and documents</label>
-            <label><input type="checkbox" name="reads" value="video" /> Video captions</label>
-          </fieldset>
-          <label class="consent"><input type="checkbox" name="consent" required /> You can email me about the beta. Nothing else.</label>
-          <button type="submit">Sign up</button>
-          <p class="status" id="signup-status" role="status"></p>
-        </form>
+      <section class="sec">
+        <div class="wrap two">
+          <div class="lead">
+            <h2 class="display display-lg">The honesty rules.</h2>
+            <p class="lede">The app is allowed to be funny while it loads. It is not allowed to be funny instead of being unsure.</p>
+          </div>
+          <dl class="ledger body">
+            <div><dt>No verdict without a source</dt><dd>Green needs a supporting source and no contradiction. Sourced red needs a contradicting source or a fabricated quote.</dd></div>
+            <div><dt>Helper calls are labelled</dt><dd>When sources are silent, the AI helper gives its call from general knowledge. It shows as a hollow dot with the words "no source fetched". It never overrides a sourced verdict.</dd></div>
+            <div><dt>Unsure names its reason</dt><dd>No source found. Source paywalled. Evidence off-topic. Judgment not confident. Every gray row says which.</dd></div>
+            <div><dt>Checked twice</dt><dd>The helper extracts claims and writes the summary. A separate judgment model checks every sentence it writes before display.</dd></div>
+            <div><dt>Words, not numbers</dt><dd>Confidence shows as strong evidence, some evidence, or can't tell. The meter shows a label, not a score.</dd></div>
+          </dl>
+        </div>
+      </section>
+
+      <section class="sec" id="keys">
+        <div class="wrap two">
+          <div class="lead">
+            <h2 class="display display-lg">Your keys, your machine.</h2>
+            <p class="lede">Callout has no server and no account. You add up to three API keys once, in Settings, with a test button for each. They live in the Windows credential store. Text you check goes only to those services and to the pages Callout fetches for evidence.</p>
+          </div>
+          <dl class="ledger body">
+            <div><dt>TypeSafe</dt><dd>Required. The judgment model, Jev. Powers the fast lane and every verdict. <a class="link" href="https://console.typesafe.ai">Get a key</a></dd></div>
+            <div><dt>Tavily</dt><dd>Optional. Web search for the deep lane. Without it, only sources linked in the text are checked. <a class="link" href="https://app.tavily.com">Get a key</a></dd></div>
+            <div><dt>LLM helper</dt><dd>Optional. DeepSeek by default, any OpenAI-compatible or Anthropic endpoint works. Extracts claims, reads screenshots, answers questions, writes the summary, and gives its own call where sources are silent. <a class="link" href="https://platform.deepseek.com">Get a key</a></dd></div>
+            <div><dt>Cost</dt><dd>Whatever your providers charge. Settings shows calls and tokens per API, always on, never sent anywhere.</dd></div>
+          </dl>
+        </div>
+      </section>
+
+      <section class="sec" id="download">
+        <div class="wrap dl">
+          <div class="lead">
+            <h2 class="display display-lg">Download.</h2>
+            <p class="lede">Beta. Unsigned for now, so Windows SmartScreen will warn: choose More info, then Run anyway. The installer replaces any older Callout it finds.</p>
+          </div>
+          <div class="card">
+            <div class="card-head"><h3 id="dl-title">Callout for Windows</h3><span class="ord" id="dl-date"></span></div>
+            <a class="btn btn-solid" id="dl-btn" href="https://github.com/The-Little-AI-Company/callout/releases/latest/download/Callout-Setup.exe">Download Callout-Setup.exe</a>
+            <p class="status" id="dl-status">Latest release on GitHub.</p>
+            <dl class="kv">
+              <div><dt>Then</dt><dd>Install, open Settings from the tray, paste your TypeSafe key, press Test and save. <a class="link" href="https://github.com/The-Little-AI-Company/callout/blob/main/docs/SETUP.md">Setup guide</a></dd></div>
+              <div><dt>Use</dt><dd>Highlight text anywhere and press <code>Ctrl + Shift + Space</code>. Or copy a link and press it. Or use the screenshot button for anything you cannot select.</dd></div>
+              <div><dt>Releases</dt><dd><a class="link" href="https://github.com/The-Little-AI-Company/callout/releases">All versions and notes</a> · <a class="link" href="https://github.com/The-Little-AI-Company/callout/issues">Report a problem</a></dd></div>
+            </dl>
+          </div>
+        </div>
       </section>
     </main>
 
     <footer>
-      <p>A joint product of the little ai company and Wazoo. Open source, MIT. <a href="https://github.com/The-Little-AI-Company/callout">Source</a>.</p>
-      <p class="tiny">Brand and spelling pending partner approval. The green plushy is an original design.</p>
+      <div class="wrap">
+        <span>A joint product of the little ai company and Wazoo. Open source, MIT.</span>
+        <span>The green plushy is an original design.</span>
+      </div>
     </footer>
 
     <script>
-      const form = document.getElementById("signup-form");
-      const status = document.getElementById("signup-status");
-      form.addEventListener("submit", async (e) => {
-        e.preventDefault();
-        status.textContent = "Sending.";
-        const data = new FormData(form);
-        const body = {
-          email: data.get("email"),
-          os: data.get("os"),
-          reads: data.getAll("reads"),
-          consent: data.get("consent") === "on",
-        };
+      (async () => {
         try {
-          const res = await fetch("/api/signup", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
-          const json = await res.json();
-          status.textContent = json.message || (res.ok ? "You're in. Check your inbox." : "Something went wrong.");
-          if (res.ok) form.querySelector("button").disabled = true;
+          const res = await fetch("https://api.github.com/repos/The-Little-AI-Company/callout/releases/latest", { headers: { accept: "application/vnd.github+json" } });
+          if (!res.ok) throw new Error(String(res.status));
+          const r = await res.json();
+          const asset = (r.assets || []).find((a) => a.name === "Callout-Setup.exe");
+          const mb = asset ? (asset.size / 1048576).toFixed(1) + " MB" : "";
+          const date = r.published_at ? new Date(r.published_at).toISOString().slice(0, 10) : "";
+          document.getElementById("kv-version").innerHTML = `${r.tag_name} <span>· ${date}</span>`;
+          document.getElementById("dl-title").textContent = `Callout ${r.tag_name} for Windows`;
+          document.getElementById("dl-date").textContent = date;
+          document.getElementById("dl-status").textContent = `${asset ? "Callout-Setup.exe, " + mb + "." : ""} Published ${date}.`;
+          if (asset) { document.getElementById("dl-btn").href = asset.browser_download_url; document.getElementById("dl-hero").href = asset.browser_download_url; }
         } catch {
-          status.textContent = "Could not reach the signup service. Try again in a minute.";
+          document.getElementById("kv-version").innerHTML = `<span>see the releases page</span>`;
         }
-      });
+      })();
+      // Reveal on scroll, opacity only.
+      const io = new IntersectionObserver((es) => es.forEach((e) => e.isIntersecting && e.target.classList.add("in")), { threshold: 0.1 });
+      document.querySelectorAll("section.sec").forEach((s) => { s.querySelectorAll(".card, .ledger, .mock").forEach((el) => el.classList.add("reveal")); io.observe(s); });
     </script>
   </body>
 </html>
