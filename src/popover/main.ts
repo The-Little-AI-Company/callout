@@ -16,7 +16,7 @@ import { answerQuestion, transcribeImage } from "@engine/helper/tasks";
 import { fetchYouTubeTranscript } from "@engine/fetch/video";
 import { isBareUrl, isVideoUrl, looksLikeQuestion, truncate } from "@engine/text/sentences";
 import { describeError } from "@engine/jev/client";
-import type { Capture, CaptureSource, ClaimVerdict, DeepLaneResult, Explanation, FastLaneResult } from "@engine/types";
+import type { Capture, CaptureSource, ClaimVerdict, DeepLaneResult, Explanation, FastLaneResult, Meter, Judgement } from "@engine/types";
 import mascotUrl from "../assets/placeholder-mascot.svg";
 
 type Phase = "empty" | "loading" | "result" | "error";
@@ -26,7 +26,7 @@ interface State {
   joke: string;
   capture?: Capture;
   fast?: FastLaneResult;
-  deep: { status: "idle" | "waiting" | "running" | "done" | "error"; claims: ClaimVerdict[]; result?: DeepLaneResult; explanation?: Explanation; error?: string };
+  deep: { status: "idle" | "waiting" | "running" | "done" | "error"; claims: ClaimVerdict[]; result?: DeepLaneResult; explanation?: Explanation; meter?: Meter; judgement?: Judgement; error?: string };
   answer?: { sentences: { text: string; backed: boolean }[]; pending?: boolean };
   expanded?: string;
   error?: { message: string; surface: string };
@@ -141,8 +141,10 @@ async function runDeep(): Promise<void> {
       if (signal?.aborted) return;
       if (e.type === "claims") set({ deep: { ...state.deep, claims: e.claims } });
       else if (e.type === "claim") set({ deep: { ...state.deep, claims: state.deep.claims.map((c) => (c.claim.id === e.claim.claim.id ? e.claim : c)) } });
-      else if (e.type === "status") set({ deep: { ...state.deep, status: "running", claims: state.deep.claims }, joke: e.message === "explaining" ? "Writing it up." : state.joke });
+      else if (e.type === "status") set({ deep: { ...state.deep, status: "running", claims: state.deep.claims }, joke: e.message === "explaining" || e.message === "judging" ? "Writing it up." : state.joke });
       else if (e.type === "explanation") set({ deep: { ...state.deep, explanation: e.explanation } });
+      else if (e.type === "meter") set({ deep: { ...state.deep, meter: e.meter } });
+      else if (e.type === "judgement") set({ deep: { ...state.deep, judgement: e.judgement, meter: e.meter } });
       else if (e.type === "error") set({ deep: { ...state.deep, status: "error", error: e.message } });
       else if (e.type === "done") set({ deep: { ...state.deep, status: state.deep.status === "error" ? "error" : "done", result: e.result, claims: e.result.claims } });
     },
@@ -291,6 +293,7 @@ function deepSection(): Node[] {
     out.push(h("div", { class: "state" }, h("span", { class: "spinner", "aria-hidden": "true" }), h("span", { class: "joke" }, state.joke)));
   }
   if (d.status === "error") out.push(h("p", { class: "error", role: "alert" }, d.error ?? "The deep check failed."));
+  if (d.meter && d.claims.length) out.push(meterView(d.meter, d.status === "running"));
   if (d.claims.length) {
     out.push(h("ul", { class: "claims" }, ...d.claims.map(claimRow)));
   } else if (d.status === "done") {
@@ -305,6 +308,13 @@ function deepSection(): Node[] {
       state.answer.pending ? h("span", {}, h("span", { class: "spinner", "aria-hidden": "true" }), "Checking the answer.") : null,
       ...state.answer.sentences.map((s) => h("span", { class: s.backed ? "" : "unbacked" }, s.backed ? `${s.text} ` : "Not in the evidence. ")),
     ));
+  } else if (d.judgement) {
+    out.push(h("div", { class: "summary" },
+      h("span", { class: "helper-tag" }, "Verdict write-up (helper, checked against the verdict list)"),
+      d.judgement.sentences.map((s) => `${s.text} `).join(""),
+      d.judgement.intent ? h("span", { class: "note" }, h("br"), `Intent: ${d.judgement.intent}.`) : null,
+      d.judgement.warning ? h("span", { class: "warn" }, d.judgement.warning) : null,
+    ));
   } else if (d.explanation) {
     out.push(h("div", { class: "summary" },
       h("span", { class: "helper-tag" }, "Summary (helper output, checked against the sources)"),
@@ -315,10 +325,31 @@ function deepSection(): Node[] {
   return out;
 }
 
+/** BS meter: gauge plus a flame, smoke, or halo for the extremes. Words, never a number. */
+function meterView(m: Meter, running: boolean): Node {
+  const icon = m.level === "pants_on_fire"
+    ? h("div", { class: "flame", "aria-hidden": "true" }, h("i"), h("i"), h("i"))
+    : m.level === "smoke"
+      ? h("div", { class: "smoke", "aria-hidden": "true" }, h("i"), h("i"), h("i"))
+      : m.level === "holds_up"
+        ? h("div", { class: "halo", "aria-hidden": "true" })
+        : h("div", { class: "gauge-dot", "aria-hidden": "true" });
+  return h("div", { class: `meter level-${m.level}`, role: "img", "aria-label": `BS meter: ${m.label}. ${m.description}` },
+    h("div", { class: "icon" }, icon),
+    h("div", {},
+      h("div", { class: "meter-label" }, h("b", {}, m.label), running ? h("span", { class: "note" }, " · still checking") : null),
+      h("div", { class: "bar" }, h("div", { class: "fill", style: `width:${m.level === "unknown" ? 0 : Math.max(4, m.percent)}%` })),
+      h("div", { class: "note" }, m.description),
+    ),
+  );
+}
+
 function claimRow(c: ClaimVerdict): Node {
   const pending = state.deep.status === "running" && c.verdict === "unsure" && !c.unsureReason;
   const open = state.expanded === c.claim.id;
-  const dotClass = pending ? "dot pending" : `dot ${c.verdict}`;
+  const sourcedDecided = ["supported", "contradicted", "fabricated_quote", "mixed"].includes(c.verdict);
+  const helperDot = !sourcedDecided && c.helper && c.helper.call !== "cannot_tell" ? ` helper-${c.helper.call}` : "";
+  const dotClass = pending ? "dot pending" : `dot ${c.verdict}${helperDot}`;
   const verdictText = pending ? "Checking" : c.verdictLabel;
   return h("li", { class: "claim" },
     h("button", { "aria-expanded": open ? "true" : "false", onClick: () => set({ expanded: open ? undefined : c.claim.id }) },
@@ -328,6 +359,7 @@ function claimRow(c: ClaimVerdict): Node {
         h("br"),
         h("span", { class: "verdict" }, h("span", { class: "vlabel" }, verdictText), pending || c.verdict === "not_checkable" || c.verdict === "incidental" ? null : h("span", { class: "band" }, ` · ${c.bandLabel}`)),
         c.why && !pending ? h("span", { class: "why" }, h("br"), c.why) : null,
+        c.helper ? h("span", { class: "helper-call" }, h("br"), h("b", {}, `Helper: ${c.helper.label}`), c.helper.reason ? ` · ${c.helper.reason}` : "", h("span", { class: "origin" }, ` (${questions.verdicts.helper_calls.origin})`)) : null,
       ),
     ),
     open ? evidence(c) : null,

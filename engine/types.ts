@@ -116,8 +116,32 @@ export interface PassageJudgment {
   confidence: number;
 }
 
+export type HelperCall = "likely_false" | "likely_true" | "cannot_tell";
+
+export type MeterLevel = "pants_on_fire" | "smoke" | "mixed" | "holds_up" | "unknown";
+
+export interface Meter {
+  /** Share of judged claims that are false, 0 to 100. Never shown as a number. */
+  percent: number;
+  level: MeterLevel;
+  label: string;
+  description: string;
+  judged: number;
+  falseCount: number;
+  trueCount: number;
+  intent?: "honest" | "careless" | "deceptive" | "unclear";
+}
+
+export interface Judgement {
+  sentences: { text: string; backed: boolean }[];
+  intent?: "honest" | "careless" | "deceptive" | "unclear";
+  warning?: string;
+}
+
 export interface ClaimVerdict {
   claim: ExtractedClaim;
+  /** The helper's call from its own knowledge. Shown with its origin, never as a sourced verdict. */
+  helper?: { call: HelperCall; label: string; reason: string };
   checkable: number;
   central: number;
   verdict: Verdict;
@@ -150,6 +174,8 @@ export interface Explanation {
 export interface DeepLaneResult {
   claims: ClaimVerdict[];
   counts: Record<Verdict, number>;
+  meter: Meter;
+  judgement?: Judgement;
   explanation?: Explanation;
   pagesFetched: FetchedPage[];
   timing: { firstVerdictMs?: number; totalMs: number };
@@ -160,6 +186,8 @@ export type DeepLaneEvent =
   | { type: "claim"; claim: ClaimVerdict }
   | { type: "status"; message: string }
   | { type: "explanation"; explanation: Explanation }
+  | { type: "judgement"; judgement: Judgement; meter: Meter }
+  | { type: "meter"; meter: Meter }
   | { type: "done"; result: DeepLaneResult }
   | { type: "error"; message: string };
 

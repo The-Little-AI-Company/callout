@@ -65,7 +65,7 @@ fast_lane:
         what: "Instructions, code, a receipt, a list, or text with no claims or views"
     # Reader-facing labels for each kind. Plain, literal.
     labels:
-      factual_claim: "Reads as factual claims"
+      factual_claim: "Makes factual claims"
       opinion: "Reads as opinion"
       prediction: "Reads as a prediction"
       advertisement: "Reads as an advertisement"
@@ -509,12 +509,42 @@ deep_lane:
       true: { what: "Everything in the sentence is in the passages or verdicts" }
       false: { what: "The sentence adds a fact, number, name, or cause not present in the passages or verdicts" }
 
+  # The helper's write-up is its own judgement, not a summary of passages, so
+  # it is checked for consistency with the verdict list rather than passages.
+  writeup_sentence_check:
+    instructions:
+      question: "Is `sentence` consistent with `verdicts` (the per-claim calls and their reasons) and with `text`, without asserting a verdict that `verdicts` does not contain?"
+    criteria:
+      true: { what: "The sentence restates or explains a call that is in the verdict list, or describes the text" }
+      false: { what: "The sentence calls something true or false that the verdict list does not, or adds an unrelated fact" }
+
   answer_sentence_check:
     instructions:
       question: "Is `sentence` fully backed by the `passages` shown, without adding facts that are not in them?"
     criteria:
       true: { what: "Everything in the sentence is in the passages" }
       false: { what: "The sentence adds a fact, number, name, or cause not present in the passages" }
+
+# BS meter. A gauge over the whole text, computed in code from the per-claim
+# verdicts (sourced and helper). Labels are words, never a number.
+meter:
+  thresholds:
+    pants_on_fire_min: 90     # share of judged claims that are false, percent
+    smoke_min: 60
+    holds_up_max: 10
+    deceptive_intent_flame_min: 60   # flame even below pants_on_fire when the helper calls intent deceptive
+  labels:
+    pants_on_fire: "Pants on fire"
+    smoke: "Mostly false"
+    mixed: "Mixed"
+    holds_up: "Holds up"
+    unknown: "Nothing judged yet"
+  descriptions:
+    pants_on_fire: "Nearly everything checkable in this text is false."
+    smoke: "Most of what is checkable in this text is false."
+    mixed: "Some of this text is false or unsupported."
+    holds_up: "What is checkable in this text holds up."
+    unknown: "No claim could be judged."
 
 # Verdict copy. Plain and literal. No jokes here, ever (PRD 10c).
 verdicts:
@@ -541,6 +571,12 @@ verdicts:
   incidental:
     label: "Not checked"
     why: "A passing detail; not fetched for."
+  # Helper calls from its own knowledge. Always shown with this origin.
+  helper_calls:
+    likely_false: "Likely false"
+    likely_true: "Likely true"
+    cannot_tell: "Can't tell"
+    origin: "from the helper's general knowledge, no source fetched"
   confidence_bands:
     strong: "Strong evidence"
     some: "Some evidence"

@@ -110,3 +110,35 @@ a borderless full-screen window. The user drags a rectangle; the webview crops
 with a canvas and sends the base64 PNG to the helper's vision model. This
 avoids a second native overlay implementation and works the same on every
 monitor layout.
+
+## 2026-09-17: The helper gets a labelled second opinion, and a BS meter
+
+Field test result: a fabricated news story with no web coverage came back
+gray "unsupported" on every claim, because Jev has no knowledge of the world
+and Tavily found nothing to contradict it. Sourced-only verdicts cannot call
+an invented story a lie. That is the case the product exists for.
+
+Change, keeping the honesty rules intact:
+
+- Sourced verdicts are unchanged. Green still needs a supporting source, red
+  still needs a contradicting source or a fabricated quote (PRD F20).
+- After the sourced pass, the helper reads the text plus the sourced verdicts
+  and gives its own call per claim from general knowledge: likely false,
+  likely true, or can't tell, with a one-line reason. It is shown on the row
+  as "Helper: Likely false (from the helper's general knowledge, no source
+  fetched)" with a hollow dot, never the solid sourced color. A helper call
+  never overrides a sourced verdict.
+- The helper also writes a two-to-three sentence verdict write-up and an
+  intent call (honest, careless, deceptive, unclear). Jev checks each write-up
+  sentence for consistency with the verdict list and drops any that asserts a
+  verdict the list does not contain. This replaces the passage-only summary
+  when the helper is on; the passage-only summary remains as the fallback.
+- BS meter: computed in code from the rows. False = sourced contradiction,
+  fabricated quote, or helper likely-false on a row with no sourced support.
+  Levels and labels live in `content/questions.yaml` under `meter`: "Pants on
+  fire" (flame) at 90 percent false, or 60 percent with deceptive intent;
+  "Mostly false" (smoke) from 60; "Holds up" (halo) at 10 or under; "Mixed"
+  between. The percent drives the bar width only; the reader sees words.
+
+The mascot and jokes stay out of the meter and the write-up. The flame,
+smoke, and halo are the meter's own states, not the mascot.

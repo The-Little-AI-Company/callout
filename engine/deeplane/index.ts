@@ -16,11 +16,11 @@ import type { JevJudge } from "../jev/client";
 import type { QuestionContent, EntryType } from "../content";
 import type { LlmHelper } from "../helper/llm";
 import type { HelperPrompts } from "../helper/tasks";
-import { extractClaims, writeQueries, explain as helperExplain } from "../helper/tasks";
+import { extractClaims, writeQueries, explain as helperExplain, judge as helperJudge } from "../helper/tasks";
 import type { PageFetcher } from "../fetch/readable";
 import type { SearchClient } from "./search";
 import { splitPassages, splitSentences, containsQuote, extractUrls } from "../text/sentences";
-import type { ClaimVerdict, DeepLaneEvent, DeepLaneResult, ExtractedClaim, Explanation, FetchedPage, Passage, PassageJudgment, Verdict, ConfidenceBand } from "../types";
+import type { ClaimVerdict, DeepLaneEvent, DeepLaneResult, ExtractedClaim, Explanation, FetchedPage, Passage, PassageJudgment, Verdict, ConfidenceBand, Meter, MeterLevel, Judgement } from "../types";
 
 export interface DeepLaneDeps {
   jev: JevJudge;
@@ -54,7 +54,7 @@ export async function runDeepLane(deps: DeepLaneDeps, input: DeepLaneInput, emit
 
   const fail = (message: string): DeepLaneResult => {
     emit({ type: "error", message });
-    return { claims: [], counts: emptyCounts(), pagesFetched, timing: { totalMs: Date.now() - t0 } };
+    return { claims: [], counts: emptyCounts(), meter: computeMeter([], deps.content), pagesFetched, timing: { totalMs: Date.now() - t0 } };
   };
 
   // 1. Claims.
@@ -73,7 +73,7 @@ export async function runDeepLane(deps: DeepLaneDeps, input: DeepLaneInput, emit
     claims = fallbackClaims(input.text, th.max_claims);
   }
   if (claims.length === 0) {
-    const result: DeepLaneResult = { claims: [], counts: emptyCounts(), pagesFetched, timing: { totalMs: Date.now() - t0 } };
+    const result: DeepLaneResult = { claims: [], counts: emptyCounts(), meter: computeMeter([], deps.content), pagesFetched, timing: { totalMs: Date.now() - t0 } };
     emit({ type: "done", result });
     return result;
   }
@@ -112,7 +112,7 @@ export async function runDeepLane(deps: DeepLaneDeps, input: DeepLaneInput, emit
   if (!deps.online) {
     for (const r of toCheck) setUnsure(r, V, "offline");
     for (const r of toCheck) emit({ type: "claim", claim: r });
-    return finish(rows, pagesFetched, t0, firstVerdictMs, emit);
+    return finish(rows, pagesFetched, t0, firstVerdictMs, emit, computeMeter(rows, deps.content));
   }
 
   // 2 to 4, per claim, concurrently with a small cap.
@@ -129,10 +129,35 @@ export async function runDeepLane(deps: DeepLaneDeps, input: DeepLaneInput, emit
     emit({ type: "claim", claim: row });
   });
 
-  // 5 and 6: explanation, only with the helper and only when something was judged.
+  // 5. The helper's judgement: its own knowledge fills in where sources are
+  // silent, clearly labeled. Then the meter, then a Jev check of the write-up.
+  let judgement: Judgement | undefined;
+  let meter = computeMeter(rows, deps.content);
+  emit({ type: "meter", meter });
+  const anyCheckable = rows.some((r) => r.verdict !== "not_checkable");
+  if (deps.llm && anyCheckable && !input.signal?.aborted) {
+    emit({ type: "status", message: "judging" });
+    try {
+      const j = await helperJudge(deps.llm, deps.prompts, input.text, claimLinesForJudge(rows), input.signal);
+      const H = deps.content.verdicts.helper_calls;
+      for (const c of j.claims) {
+        const row = rows.find((r) => r.claim.id === c.id);
+        if (!row || row.verdict === "not_checkable" || row.verdict === "incidental") continue;
+        row.helper = { call: c.call, label: H[c.call], reason: c.reason };
+        emit({ type: "claim", claim: row });
+      }
+      meter = computeMeter(rows, deps.content, j.overall.intent, j.overall.false_share);
+      judgement = await checkWriteup(deps, rows, input.text, j.overall.writeup, j.overall.intent, input.signal);
+      emit({ type: "judgement", judgement, meter });
+    } catch (e) {
+      emit({ type: "status", message: `judgement failed: ${e instanceof Error ? e.message : String(e)}` });
+    }
+  }
+
+  // 6. Sourced explanation, only when there is no judgement and passages were kept.
   let explanation: Explanation | undefined;
   const judged = rows.filter((r) => r.judgments.length > 0);
-  if (deps.llm && judged.length > 0 && !input.signal?.aborted) {
+  if (!judgement && deps.llm && judged.length > 0 && !input.signal?.aborted) {
     emit({ type: "status", message: "explaining" });
     try {
       explanation = await explainAndCheck(deps, rows, input.signal);
@@ -142,7 +167,59 @@ export async function runDeepLane(deps: DeepLaneDeps, input: DeepLaneInput, emit
     }
   }
 
-  return finish(rows, pagesFetched, t0, firstVerdictMs, emit, explanation);
+  return finish(rows, pagesFetched, t0, firstVerdictMs, emit, meter, judgement, explanation);
+}
+
+function claimLinesForJudge(rows: ClaimVerdict[]): string {
+  return rows
+    .map((r) => {
+      const src = r.best ? ` | Best passage (${r.best.passage.url}): ${r.best.passage.text.slice(0, 400)}` : "";
+      return `${r.claim.id} | ${r.claim.text} | Sourced verdict: ${r.verdictLabel}${r.why ? ` (${r.why})` : ""}${src}`;
+    })
+    .join("\n");
+}
+
+/**
+ * BS meter, computed in code from the rows (PRD 10c: words, never a number,
+ * on screen). Sourced contradictions and helper "likely false" calls both
+ * count as false; a helper call never overrides a sourced verdict.
+ */
+export function computeMeter(rows: ClaimVerdict[], content: QuestionContent, intent?: Meter["intent"], helperShare?: number): Meter {
+  const th = content.meter.thresholds;
+  const judgedRows = rows.filter((r) => r.verdict !== "not_checkable" && r.verdict !== "incidental");
+  const isFalse = (r: ClaimVerdict) => r.verdict === "contradicted" || r.verdict === "fabricated_quote" || (r.helper?.call === "likely_false" && r.verdict !== "supported");
+  const isTrue = (r: ClaimVerdict) => r.verdict === "supported" || (r.helper?.call === "likely_true" && r.verdict !== "contradicted" && r.verdict !== "fabricated_quote");
+  const falseCount = judgedRows.filter(isFalse).length;
+  const trueCount = judgedRows.filter((r) => !isFalse(r) && isTrue(r)).length;
+  const decided = falseCount + trueCount;
+  let percent: number;
+  let level: MeterLevel;
+  if (decided === 0 && helperShare === undefined) {
+    percent = 0;
+    level = "unknown";
+  } else {
+    percent = decided > 0 ? Math.round((100 * falseCount) / decided) : Math.round(helperShare ?? 0);
+    if (percent >= th.pants_on_fire_min || (intent === "deceptive" && percent >= th.deceptive_intent_flame_min)) level = "pants_on_fire";
+    else if (percent >= th.smoke_min) level = "smoke";
+    else if (percent <= th.holds_up_max) level = "holds_up";
+    else level = "mixed";
+  }
+  return { percent, level, label: content.meter.labels[level], description: content.meter.descriptions[level], judged: judgedRows.length, falseCount, trueCount, intent };
+}
+
+/** Jev checks each write-up sentence for consistency with the verdict list; inconsistent sentences are dropped. */
+async function checkWriteup(deps: DeepLaneDeps, rows: ClaimVerdict[], text: string, sentences: string[], intent: Judgement["intent"], signal?: AbortSignal): Promise<Judgement> {
+  if (sentences.length === 0) return { sentences: [], intent, warning: "The helper gave no write-up." };
+  const verdicts = rows.map((r) => ({ claim: r.claim.text, sourced: r.verdictLabel, helper: r.helper ? `${r.helper.label}: ${r.helper.reason}` : undefined }));
+  const q: Questions = {};
+  sentences.forEach((_, i) => {
+    q[`s${i}`] = { type: "noul", instructions: { ...(deps.content.deep_lane.writeup_sentence_check.instructions as object), sentence: `sentences[${i}]` }, criteria: deps.content.deep_lane.writeup_sentence_check.criteria as never };
+  });
+  const res = await deps.jev.ask({ sentences, verdicts, text: text.slice(0, 8000) }, q, { lane: "deep", step: "writeup_check", signal });
+  const checked = sentences.map((t, i) => ({ text: t, backed: ((res.answers as Record<string, { noul?: number }>)[`s${i}`]?.noul ?? 0) >= deps.content.thresholds.explanation_confidence }));
+  const kept = checked.filter((c) => c.backed);
+  const warning = kept.length === 0 ? "The write-up did not match the verdicts and was removed." : kept.length < checked.length ? "One sentence was removed because it did not match the verdicts." : undefined;
+  return { sentences: kept, intent, warning };
 }
 
 async function checkClaim(deps: DeepLaneDeps, input: DeepLaneInput, row: ClaimVerdict, textUrls: string[], pagesFetched: FetchedPage[]): Promise<void> {
@@ -326,10 +403,10 @@ export async function checkAnswerSentences(deps: Pick<DeepLaneDeps, "jev" | "con
   return sentences.map((text, i) => ({ text, backed: ((res.answers as Record<string, { noul?: number }>)[`s${i}`]?.noul ?? 0) >= deps.content.thresholds.explanation_confidence }));
 }
 
-function finish(rows: ClaimVerdict[], pagesFetched: FetchedPage[], t0: number, firstVerdictMs: number | undefined, emit: Emit, explanation?: Explanation): DeepLaneResult {
+function finish(rows: ClaimVerdict[], pagesFetched: FetchedPage[], t0: number, firstVerdictMs: number | undefined, emit: Emit, meter: Meter, judgement?: Judgement, explanation?: Explanation): DeepLaneResult {
   const counts = emptyCounts();
   for (const r of rows) counts[r.verdict]++;
-  const result: DeepLaneResult = { claims: rows, counts, explanation, pagesFetched, timing: { firstVerdictMs, totalMs: Date.now() - t0 } };
+  const result: DeepLaneResult = { claims: rows, counts, meter, judgement, explanation, pagesFetched, timing: { firstVerdictMs, totalMs: Date.now() - t0 } };
   emit({ type: "done", result });
   return result;
 }

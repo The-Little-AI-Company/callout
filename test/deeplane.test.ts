@@ -5,7 +5,7 @@ import { parseQuestionContent } from "@engine/content";
 import { MockJev } from "@engine/jev/mock";
 import { UsageLog } from "@engine/usage";
 import { PageFetcher } from "@engine/fetch/readable";
-import { runDeepLane, rollUp, checkAnswerSentences } from "@engine/deeplane";
+import { runDeepLane, rollUp, checkAnswerSentences, computeMeter } from "@engine/deeplane";
 import type { SearchClient } from "@engine/deeplane/search";
 import type { LlmHelper, LlmRequest, LlmResponse } from "@engine/helper/llm";
 import { parseHelperPrompts } from "@engine/helper/tasks";
@@ -66,6 +66,14 @@ function scriptedLlm(script: { explainRounds?: string[][] } = {}, usage?: UsageL
         text = JSON.stringify({ queries: ["harbor bridge opened 1932", "harbor bridge cost"] });
       } else if (req.step === "explain") {
         text = JSON.stringify({ sentences: rounds[Math.min(explainCall++, rounds.length - 1)] });
+      } else if (req.step === "judge") {
+        text = JSON.stringify({
+          claims: [
+            { id: "c1", call: "likely_true", reason: "Matches the record." },
+            { id: "c2", call: "likely_false", reason: "The cost was far lower." },
+          ],
+          overall: { false_share: 50, intent: "careless", writeup: ["The opening date holds up and the cost claim is contradicted.", "The bridge is made of cheese."] },
+        });
       }
       return { text, inputTokens: 10, outputTokens: 5, model: "mock" };
     },
@@ -94,7 +102,7 @@ function scriptedJev(usage?: UsageLog) {
     }
     if (q.type === "noul" && id.startsWith("s")) {
       const s = st.sentences![Number(id.slice(1))]!;
-      return /gold/i.test(s) ? 0.05 : 0.95;
+      return /gold|cheese/i.test(s) ? 0.05 : 0.95;
     }
     return 0.1;
   }, usage);
@@ -124,10 +132,12 @@ describe("deep lane", () => {
 
     expect(by["Bridges are beautiful."]!.verdict).toBe("not_checkable");
 
-    // F13: the unbacked sentence about gold paint never survives; regeneration happened once.
-    expect(result.explanation?.sentences.map((s) => s.text).join(" ")).not.toMatch(/gold/i);
-    expect(llm.calls.filter((c) => c.step === "explain").length).toBe(2);
-    expect(result.explanation?.sentences.length).toBe(2);
+    // Helper judgement: labeled calls on rows, write-up checked by Jev (cheese sentence dropped), meter from the rows.
+    expect(cost.helper).toMatchObject({ call: "likely_false", label: "Likely false" });
+    expect(llm.calls.filter((c) => c.step === "judge").length).toBe(1);
+    expect(result.judgement?.sentences.map((s) => s.text)).toEqual(["The opening date holds up and the cost claim is contradicted."]);
+    expect(result.judgement?.warning).toMatch(/removed/);
+    expect(result.meter).toMatchObject({ level: "mixed", percent: 50, judged: 2, falseCount: 1, trueCount: 1 });
 
     // Events stream: claims first, then per-claim updates, then explanation, then done.
     expect(events[0]!.type).toBe("status");
@@ -136,7 +146,7 @@ describe("deep lane", () => {
 
     // Usage logged per lane and step (PLAN 5).
     const steps = new Set(usage.byLaneAndStep().map((r) => `${r.api}:${r.step}`));
-    for (const s of ["typesafe:claim_gate", "typesafe:rerank", "typesafe:support", "typesafe:explain_check", "llm:extract_claims", "llm:write_queries", "llm:explain"]) expect(steps.has(s), s).toBe(true);
+    for (const s of ["typesafe:claim_gate", "typesafe:rerank", "typesafe:support", "typesafe:writeup_check", "llm:extract_claims", "llm:write_queries", "llm:judge"]) expect(steps.has(s), s).toBe(true);
     expect(result.pagesFetched.map((p) => p.url)).toContain("https://src.test/bridge");
   });
 
@@ -187,6 +197,21 @@ describe("deep lane", () => {
     r = row([mk("supports", 0.9), mk("contradicts", 0.5)]);
     rollUp(r, content);
     expect(r.verdict).toBe("mixed");
+  });
+
+  it("meter: flame for lies, smoke for mostly false, halo for holds up, unknown when nothing judged", () => {
+    const row = (verdict: ClaimVerdict["verdict"], helper?: ClaimVerdict["helper"]): ClaimVerdict => ({ claim: { id: "c", text: "x", quote: "x" }, checkable: 1, central: 1, verdict, verdictLabel: verdict, why: "", band: "none", bandLabel: "", judgments: [], thresholds: { support_confidence: 0.8 }, helper });
+    const lf = { call: "likely_false" as const, label: "Likely false", reason: "" };
+    const lt = { call: "likely_true" as const, label: "Likely true", reason: "" };
+    expect(computeMeter([row("contradicted"), row("unsupported", lf)], content).level).toBe("pants_on_fire");
+    expect(computeMeter([row("contradicted"), row("unsupported", lf), row("supported")], content).level).toBe("smoke");
+    expect(computeMeter([row("contradicted"), row("supported")], content, "deceptive").level).toBe("mixed");
+    expect(computeMeter([row("contradicted"), row("contradicted"), row("supported")], content, "deceptive").level).toBe("pants_on_fire");
+    expect(computeMeter([row("supported"), row("unsupported", lt)], content).level).toBe("holds_up");
+    // A helper call never overrides a sourced verdict.
+    expect(computeMeter([row("supported", lf)], content).falseCount).toBe(0);
+    expect(computeMeter([row("not_checkable")], content).level).toBe("unknown");
+    expect(computeMeter([row("unsure")], content, "unclear", 80).level).toBe("smoke");
   });
 
   it("checks helper answer sentences against passages (F14d)", async () => {

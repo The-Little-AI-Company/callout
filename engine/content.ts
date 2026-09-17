@@ -3,7 +3,7 @@
  * and the line bank (content/lines.yaml). Code never inlines question wording.
  */
 import { parse } from "yaml";
-import type { ContentKind } from "./types";
+import type { ContentKind, MeterLevel } from "./types";
 
 export type { EntryType } from "@typesafe-ai/sdk";
 import type { EntryType } from "@typesafe-ai/sdk";
@@ -76,7 +76,13 @@ export interface QuestionContent {
     passage_relevance: { instructions: EntryType; criteria: EntryType[] };
     relation: { instructions: EntryType; criteria: Record<"supports" | "contradicts" | "says_nothing", EntryType> };
     explanation_sentence_check: NoulSpec;
+    writeup_sentence_check: NoulSpec;
     answer_sentence_check: NoulSpec;
+  };
+  meter: {
+    thresholds: { pants_on_fire_min: number; smoke_min: number; holds_up_max: number; deceptive_intent_flame_min: number };
+    labels: Record<MeterLevel, string>;
+    descriptions: Record<MeterLevel, string>;
   };
   verdicts: {
     supported: { label: string; why: string };
@@ -87,6 +93,7 @@ export interface QuestionContent {
     unsure: { label: string };
     not_checkable: { label: string; why: string };
     incidental: { label: string; why: string };
+    helper_calls: { likely_false: string; likely_true: string; cannot_tell: string; origin: string };
     confidence_bands: Record<"strong" | "some" | "none", string>;
     unsure_reasons: Record<string, string>;
   };

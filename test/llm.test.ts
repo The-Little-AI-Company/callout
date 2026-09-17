@@ -83,3 +83,12 @@ describe.skipIf(!key)("live DeepSeek helper", () => {
     console.log("live extract:", r.kept, "dropped:", r.dropped);
   }, 60000);
 });
+
+describe("repairJson", () => {
+  it("closes a missing array bracket before matching object closers", () => {
+    expect(parseJsonLoose('{"overall":{"writeup":["a","b"}}')).toEqual({ overall: { writeup: ["a", "b"] } });
+  });
+  it("closes truncated output", () => {
+    expect(parseJsonLoose('{"claims":[{"id":"c1","call":"likely_false","reason":"cut off')).toEqual({ claims: [{ id: "c1", call: "likely_false", reason: "cut off" }] });
+  });
+});

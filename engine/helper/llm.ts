@@ -232,7 +232,64 @@ export function parseJsonLoose<T>(text: string): T {
     if (fence?.[1]) return JSON.parse(fence[1].trim()) as T;
     const start = trimmed.search(/[[{]/);
     const end = Math.max(trimmed.lastIndexOf("}"), trimmed.lastIndexOf("]"));
-    if (start >= 0 && end > start) return JSON.parse(trimmed.slice(start, end + 1)) as T;
+    if (start >= 0) {
+      const slice = trimmed.slice(start, end > start ? end + 1 : undefined);
+      try {
+        return JSON.parse(slice) as T;
+      } catch {
+        try {
+          return JSON.parse(repairJson(slice)) as T;
+        } catch {
+          throw new Error("Helper did not return JSON");
+        }
+      }
+    }
     throw new Error("Helper did not return JSON");
   }
+}
+
+/**
+ * Repair the two JSON mistakes small models make: truncation (unclosed
+ * strings, arrays, objects) and a missing closer before a matching one
+ * (`["a"}}`). Walks the text with a bracket stack; when a closer does not
+ * match the top of the stack, inserts the expected closers first; at the
+ * end, closes whatever is still open.
+ */
+export function repairJson(text: string): string {
+  const out: string[] = [];
+  const stack: string[] = [];
+  let inString = false;
+  let escaped = false;
+  for (const ch of text) {
+    if (inString) {
+      out.push(ch);
+      if (escaped) escaped = false;
+      else if (ch === "\\") escaped = true;
+      else if (ch === '"') inString = false;
+      continue;
+    }
+    if (ch === '"') {
+      inString = true;
+      out.push(ch);
+    } else if (ch === "{" || ch === "[") {
+      stack.push(ch === "{" ? "}" : "]");
+      out.push(ch);
+    } else if (ch === "}" || ch === "]") {
+      if (stack.length === 0) continue; // stray closer
+      if (stack[stack.length - 1] !== ch && stack.includes(ch)) {
+        // Close the inner openers the model forgot, then this one.
+        while (stack.length && stack[stack.length - 1] !== ch) out.push(stack.pop()!);
+      }
+      if (stack[stack.length - 1] === ch) {
+        stack.pop();
+        out.push(ch);
+      }
+    } else {
+      out.push(ch);
+    }
+  }
+  if (inString) out.push('"');
+  let s = out.join("").replace(/,\s*$/, "");
+  while (stack.length) s += stack.pop();
+  return s;
 }

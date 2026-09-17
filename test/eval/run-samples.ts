@@ -63,13 +63,15 @@ for (const s of samples) {
     ? await runDeepLane({ jev, content, llm, prompts, fetcher, search, online: true }, { text: s.text }, () => {})
     : undefined;
   results.push({ id: s.id, fast, deep });
-  console.log(`kind=${fast.contentKind} signals=${fast.signals.map((x) => x.id).join(",")} techniques=${fast.techniques.map((x) => x.id).join(",")} deep=${deep ? Object.entries(deep.counts).filter(([, n]) => n).map(([k, n]) => `${k}:${n}`).join(" ") : "skipped"} fast=${fast.timing.totalMs}ms`);
+  console.log(`kind=${fast.contentKind} signals=${fast.signals.map((x) => x.id).join(",")} techniques=${fast.techniques.map((x) => x.id).join(",")} meter=${deep?.meter.level ?? "-"} deep=${deep ? Object.entries(deep.counts).filter(([, n]) => n).map(([k, n]) => `${k}:${n}`).join(" ") : "skipped"} fast=${fast.timing.totalMs}ms`);
 
   review.push(`## ${s.id}`, "", `> ${s.text}`, "", `Kind: ${fast.contentKindLabel}. Level: ${fast.manipulationLevel.label}. Signals: ${fast.signals.map((x) => x.label).join("; ") || "none"}. Techniques: ${fast.techniques.map((x) => x.label).join("; ") || "none"}.`, "");
   if (s.planted.length) review.push(`Planted: ${s.planted.join(" | ")}`, "");
   if (deep) {
     review.push("| Claim | Verdict | Why | Source | Right? |", "|---|---|---|---|---|");
     for (const c of deep.claims) review.push(`| ${c.claim.text} | ${c.verdictLabel} (${c.bandLabel}) | ${c.why} | ${c.best ? `[link](${c.best.passage.url})` : ""} | |`);
+    review.push("", `Meter: ${deep.meter.label}. ${deep.meter.description}`);
+    if (deep.judgement) review.push(`Write-up: ${deep.judgement.sentences.map((x) => x.text).join(" ")}${deep.judgement.warning ? ` (${deep.judgement.warning})` : ""}`);
     if (deep.explanation) review.push("", `Summary: ${deep.explanation.sentences.map((x) => x.text).join(" ")}${deep.explanation.warning ? ` (${deep.explanation.warning})` : ""}`);
     review.push("");
   } else {

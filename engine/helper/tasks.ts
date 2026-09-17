@@ -6,7 +6,7 @@
 import { parse } from "yaml";
 import type { LlmHelper, LlmImage } from "./llm";
 import type { ExtractedClaim } from "../types";
-import { containsQuote, normalize } from "../text/sentences";
+import { containsQuote, normalize, splitSentences } from "../text/sentences";
 
 export interface HelperPrompts {
   [task: string]: { system: string; user: string };
@@ -132,4 +132,50 @@ export async function transcribeFrames(llm: LlmHelper, prompts: HelperPrompts, f
   const p = prompts.transcribe_video_frames!;
   const out = await llm.completeJson<{ text?: string }>({ system: p.system, user: p.user, images: frames, step: "transcribe_frames", lane: "helper", maxTokens: 4096, signal });
   return (out.text ?? "").trim();
+}
+
+export interface JudgeResult {
+  claims: Array<{ id: string; call: "likely_false" | "likely_true" | "cannot_tell"; reason: string }>;
+  overall: { false_share?: number; intent?: "honest" | "careless" | "deceptive" | "unclear"; writeup: string[] };
+}
+
+interface RawJudge {
+  claims?: Array<{ id?: unknown; call?: unknown; reason?: unknown }>;
+  overall?: { false_share?: unknown; intent?: unknown; writeup?: unknown };
+}
+
+/**
+ * The helper's own read of the text and the sourced verdicts (its knowledge
+ * of the world, which Jev does not have). Labeled as helper output wherever
+ * it is shown; the write-up is checked by Jev for consistency with the
+ * verdict list before display.
+ */
+export async function judge(llm: LlmHelper, prompts: HelperPrompts, text: string, claimLines: string, signal?: AbortSignal): Promise<JudgeResult> {
+  const p = prompts.judge!;
+  const out = await llm.completeJson<RawJudge>({
+    system: p.system,
+    user: fill(p.user, { text: text.slice(0, 20000), claims: claimLines }),
+    step: "judge",
+    lane: "deep",
+    model: llm.config.explainModel,
+    maxTokens: 2000,
+    signal,
+  });
+  const calls = new Set(["likely_false", "likely_true", "cannot_tell"]);
+  const intents = new Set(["honest", "careless", "deceptive", "unclear"]);
+  const rawWriteup = out.overall?.writeup;
+  const writeup = (Array.isArray(rawWriteup) ? rawWriteup.filter((x): x is string => typeof x === "string") : typeof rawWriteup === "string" ? splitSentences(rawWriteup) : [])
+    .map((x) => x.trim())
+    .filter(Boolean)
+    .slice(0, 4);
+  return {
+    claims: (out.claims ?? [])
+      .filter((c): c is { id: string; call: JudgeResult["claims"][number]["call"]; reason?: unknown } => !!c && typeof c.id === "string" && typeof c.call === "string" && calls.has(c.call))
+      .map((c) => ({ id: c.id, call: c.call, reason: typeof c.reason === "string" ? c.reason.trim() : "" })),
+    overall: {
+      false_share: typeof out.overall?.false_share === "number" ? Math.max(0, Math.min(100, out.overall.false_share)) : undefined,
+      intent: typeof out.overall?.intent === "string" && intents.has(out.overall.intent) ? (out.overall.intent as JudgeResult["overall"]["intent"]) : undefined,
+      writeup,
+    },
+  };
 }
