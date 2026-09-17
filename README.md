@@ -8,7 +8,8 @@ source. The header on every result: **Signals in the text itself. Not a truth
 check.**
 
 Windows tray app, open source (MIT), bring your own keys. Made by The Little
-AI Company. In private beta.
+AI Company. Download the installer from the
+[latest release](https://github.com/The-Little-AI-Company/callout/releases/latest).
 
 ## How it works
 
