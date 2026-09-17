@@ -50,7 +50,7 @@ Settings). Or copy a URL and press the key. Or click the tray icon.
 ## What leaves your machine
 
 Text you check goes to TypeSafe, your LLM provider, and Tavily, plus the pages
-Callout fetches. Nothing goes to the partners. Keys are in the Windows
+Callout fetches. Nothing goes to The Little AI Company. Keys are in the Windows
 credential store. History is off unless you turn it on.
 
 ## Feedback

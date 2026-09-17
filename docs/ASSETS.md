@@ -1,6 +1,6 @@
 # Assets
 
-Art is produced by the partners with ChatGPT's image generation. The build
+Art is produced by Jeff with ChatGPT's image generation. The build
 ships placeholders (`src/assets/placeholder-*.svg`, a flat gray skull-and-ears
 silhouette) until each file lands at the path below. Drop the real file in
 place with the same name; no code change is needed.

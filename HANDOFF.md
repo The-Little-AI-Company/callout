@@ -44,7 +44,7 @@ Fixed decisions. Do not reopen them:
   unsure with a stated reason. Confidence shown in words, never numbers.
 - Privacy: history off by default; text goes only to the three configured
   APIs and fetched pages; usage counters per API always on.
-- Beta: landing page plus signup form hosted by the little ai company;
+- Release: landing page plus a public download hosted by The Little AI Company;
   signups through Resend to a shared inbox and Resend contacts; hard cap of
   20 testers in wave one, then a waitlist message.
 - Personality: skullbunny mascot with line eyes, "eat the rich" shirt, and a
@@ -97,7 +97,7 @@ Working rules:
 - Stop and ask before any external action: publishing, buying a domain,
   sending real emails, or creating accounts.
 
-Assets. Do not generate images yourself. The partners produce art with
+Assets. Do not generate images yourself. Jeff produces art with
 ChatGPT's image generation. When you need an asset, add a row to
 `docs/ASSETS.md` with the filename, size, format, where it is used, and a
 generation prompt, then continue with a placeholder. Required assets for v1:
@@ -114,7 +114,7 @@ generation prompt, then continue with a placeholder. Required assets for v1:
 | `og-image.png` | 1200 by 630 landing page share image with wordmark | site |
 | `wordmark.svg` | "Callout" wordmark, single color | site, about page |
 
-Mascot generation prompt to start from (partners will iterate in ChatGPT):
+Mascot generation prompt to start from (Jeff will iterate in ChatGPT):
 "A small cartoon skull with tall rabbit ears, eyes drawn as two flat horizontal
 lines, sly closed-mouth expression. Wears a plain black T-shirt with 'EAT THE
 RICH' in white block letters. Holds a small green robot plushy in both arms:
