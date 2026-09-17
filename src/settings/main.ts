@@ -271,7 +271,7 @@ function render(): void {
       h("label", { class: "toggle" }, includeText, " Include checked text in the report"),
       h("p", { class: "small muted" }, "The report has verdict counts, usage, and this build number. Paste it into the feedback form."),
       h("p", { class: "small muted" }, `Version ${build.version}, build ${build.build}, ${build.platform}. `, h("a", { href: "#", onClick: (e) => { e.preventDefault(); void openUrl("https://github.com/The-Little-AI-Company/callout/releases/latest"); } }, "Check for a newer version")),
-      h("p", { class: "small muted" }, "Callout by Jeff Kazzee. A joint product of the little ai company and Wazoo. MIT licensed. ", h("a", { href: "#", onClick: (e) => { e.preventDefault(); void openUrl("https://the-little-ai-company.github.io/callout/docs/"); } }, "Docs")),
+      h("p", { class: "small muted" }, "Callout by Jeff Kazzee, The Little AI Company. MIT licensed. ", h("a", { href: "#", onClick: (e) => { e.preventDefault(); void openUrl("https://the-little-ai-company.github.io/callout/docs/"); } }, "Docs")),
     ),
   );
   void usageTable().then((node) => {

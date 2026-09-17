@@ -5,6 +5,12 @@ Version: PRD v0.2, 2026-09-17.
 Companion technical design: `PLAN.md` in this folder.
 Standalone product. Unrelated to Vivary. Builder: Codex, own repository.
 
+Ownership note, 2026-09-17: Callout is a product of The Little AI Company
+alone. Where this document says partners, partner inbox, combined brand, or
+co-brand, read The Little AI Company. Where it describes a private beta with
+invites and a signup form, that plan is superseded: the installer is a public
+download from the latest GitHub release.
+
 ## 1. One-line
 
 Press a hotkey over anything you are reading and get an honest, fast read on
@@ -39,7 +45,7 @@ keys once, with guided setup.
 | License | Open source, MIT |
 | Privacy | Local history off by default; text leaves the machine only to user-configured APIs |
 | Search API | Tavily |
-| Ownership | A joint product of the little ai company and Wazoo (Jeff and Ethan). Brand and spelling to be confirmed by both partners before the landing page ships |
+| Ownership | The Little AI Company |
 | Distribution of build 1 | Private beta behind a signup form on a landing page. No public download until the section 9 gates pass |
 | LLM helper default model | DeepSeek V4.1 Flash for vision and extraction; user-switchable in settings |
 | LLM helper | Optional, user-enabled. Handles what Jev cannot: seeing screenshots, transcribing video, cleaning messy input, answering follow-up questions. Jev is text and JSON only, confirmed in the Typesafe docs on 2026-09-17 |
@@ -270,10 +276,10 @@ Measured locally and opt-in only, since there is no server.
 
 The only hosted piece in v1. Everything else stays local.
 
-- L0. Hosting: the landing page, the signup handler, and beta downloads are
-  hosted by the little ai company (Jeff's side). Ethan's side co-brands.
-- L1. One landing page under the combined brand: what the tool does, the
-  honesty promise from section 5, a short demo capture, and a signup form.
+- L0. Hosting: the landing page and downloads are hosted by The Little AI
+  Company.
+- L1. One landing page under The Little AI Company brand: what the tool does,
+  the honesty promise from section 5, a short demo capture, and the download.
 - L2. Form fields: email, operating system, what they mostly read (a few
   checkboxes), and consent to be contacted about the beta. Nothing else.
 - L3. No separate signup database. The form posts to a tiny serverless
@@ -286,16 +292,16 @@ The only hosted piece in v1. Everything else stays local.
 - L4. Invites go out through Resend with a download link, a setup guide for
   the three keys, and a feedback link. Later waves are sized so the human
   review in section 9 can keep up.
-- L5. The landing page states clearly that the app uses the tester's own API
-  keys and that checked text never reaches the partners' servers.
+- L5. The landing page states clearly that the app uses the user's own API
+  keys and that checked text never reaches The Little AI Company.
 - L6. Beta builds are signed and versioned; each tester sees the build number
   in settings so feedback can be matched to a build.
 - L7. A feedback path inside the app: one button that copies a redacted report
   (verdicts and usage, no checked text unless the tester ticks a box) for
   pasting into the feedback form.
 
-Both partners approve the landing page copy and the brand treatment before
-anything is published.
+Jeff approves the landing page copy and the brand treatment before anything
+is published.
 
 ## 10b. Assets
 
@@ -365,6 +371,5 @@ Flash. Users can switch models in settings.)
 4. Helper: input box questions, messy-paste extraction, screenshot and video
    transcription; summary plus summary check; history; offline mode;
    accessibility pass.
-5. Landing page and signup form live under the combined brand; first invite
-   wave; fifty-item human review of verdicts and a week of cost data from
+5. Landing page and download live under The Little AI Company brand; fifty-item human review of verdicts and a week of cost data from
    testers; go or no-go on a public release.

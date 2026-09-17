@@ -2,7 +2,7 @@
 name = "callout"
 version = "0.2.0"
 description = "Press a hotkey over anything you are reading and get an honest read on it."
-authors = ["the little ai company", "Wazoo"]
+authors = ["The Little AI Company"]
 license = "MIT"
 edition = "2021"
 rust-version = "1.80"

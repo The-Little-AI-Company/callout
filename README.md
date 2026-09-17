@@ -7,8 +7,9 @@ lane, a few seconds). Unsure is a real answer. Nothing is shown without a
 source. The header on every result: **Signals in the text itself. Not a truth
 check.**
 
-Windows tray app, open source (MIT), bring your own keys. A joint product of
-the little ai company and Wazoo. Currently in private beta.
+Windows tray app, open source (MIT), bring your own keys. Made by The Little
+AI Company. Download the installer from the
+[latest release](https://github.com/The-Little-AI-Company/callout/releases/latest).
 
 ## How it works
 
@@ -97,5 +98,5 @@ one-line attribution example in [LICENSE](LICENSE) and on the
 - `docs/PRD.md` and `docs/PLAN.md`: what and how, binding.
 - `docs/DECISIONS.md`: stack choices and their reasons.
 - `docs/SETUP.md`: tester guide to the three keys.
-- `docs/ASSETS.md`: art the partners produce, with prompts.
+- `docs/ASSETS.md`: the art, with prompts.
 - `docs/COSTS.md`: usage and cost table, filled from real runs.
