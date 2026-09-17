@@ -137,6 +137,7 @@ export const app = {
   setHotkey: (accelerator: string) => invoke<void>("set_hotkey", { accelerator }),
   buildInfo: async (): Promise<BuildInfo> => (isTauri() ? invoke<BuildInfo>("build_info") : { version: "dev", build: "browser", platform: "browser" }),
   resizePopover: (height: number) => (isTauri() ? invoke<void>("resize_popover", { height: Math.round(height) }) : Promise.resolve()),
+  setPinned: (pinned: boolean) => (isTauri() ? invoke<void>("set_pinned", { pinned }) : Promise.resolve()),
   tryNow: () => (isTauri() ? invoke<void>("try_now") : Promise.resolve()),
   closeSettings: () => (isTauri() ? invoke<void>("close_settings") : Promise.resolve(window.close())),
   writeClipboard: (text: string) => (isTauri() ? invoke<void>("write_clipboard", { text }) : navigator.clipboard.writeText(text)),

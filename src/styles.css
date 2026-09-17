@@ -29,8 +29,8 @@
 * { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; }
 body { font-family: var(--font); font-size: 13px; line-height: 1.4; color: var(--text); background: var(--bg); }
-body.popover { background: transparent; }
-body.popover #app { width: 380px; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: 0 10px 30px rgba(0,0,0,.35); overflow: hidden; }
+body.popover { background: var(--panel); }
+body.popover #app { width: 380px; background: var(--panel); overflow: hidden; }
 button, input, select, textarea { font: inherit; color: inherit; }
 button { cursor: pointer; }
 :focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
@@ -38,9 +38,10 @@ button { cursor: pointer; }
 a { color: var(--accent); }
 
 /* Popover layout: one column. */
-.head { display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; border-bottom: 1px solid var(--line); -webkit-app-region: drag; }
+.head { display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; border-bottom: 1px solid var(--line); cursor: grab; user-select: none; }
 .head .title { font-weight: 600; letter-spacing: .2px; }
-.head .actions { display: flex; gap: 4px; -webkit-app-region: no-drag; }
+.head .actions { display: flex; gap: 4px; cursor: default; }
+.iconbtn.on { color: var(--accent); }
 .iconbtn { background: transparent; border: 0; color: var(--muted); padding: 3px 6px; border-radius: 6px; }
 .iconbtn:hover { background: var(--panel-2); color: var(--text); }
 .body { padding: 10px; display: flex; flex-direction: column; gap: 10px; max-height: 560px; overflow-y: auto; }

@@ -44,6 +44,7 @@ pub fn resize_popover(app: &AppHandle, height: u32) -> Result<(), String> {
 }
 
 pub fn open_settings(app: &AppHandle) -> Result<(), String> {
+    let _ = hide_popover(app);
     if let Some(w) = app.get_webview_window("settings") {
         w.show().map_err(|e| format!("{e}"))?;
         w.set_focus().map_err(|e| format!("{e}"))?;

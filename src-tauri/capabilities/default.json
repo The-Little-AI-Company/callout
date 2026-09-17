@@ -2,7 +2,11 @@
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
   "description": "Callout windows: popover, settings, screenshot overlay.",
-  "windows": ["popover", "settings", "screenshot"],
+  "windows": [
+    "popover",
+    "settings",
+    "screenshot"
+  ],
   "permissions": [
     "core:default",
     "core:event:default",
@@ -12,6 +16,7 @@
     "core:window:allow-set-size",
     "core:window:allow-set-position",
     "core:window:allow-close",
+    "core:window:allow-start-dragging",
     "global-shortcut:default",
     "clipboard-manager:allow-read-text",
     "clipboard-manager:allow-write-text",
@@ -19,8 +24,25 @@
     "store:default",
     {
       "identifier": "http:default",
-      "allow": [{ "url": "https://**" }, { "url": "http://**" }],
-      "deny": [{ "url": "http://localhost:*" }, { "url": "http://127.0.0.1:*" }, { "url": "http://169.254.169.254/**" }]
+      "allow": [
+        {
+          "url": "https://**"
+        },
+        {
+          "url": "http://**"
+        }
+      ],
+      "deny": [
+        {
+          "url": "http://localhost:*"
+        },
+        {
+          "url": "http://127.0.0.1:*"
+        },
+        {
+          "url": "http://169.254.169.254/**"
+        }
+      ]
     }
   ]
 }

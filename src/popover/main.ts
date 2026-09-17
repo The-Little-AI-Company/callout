@@ -37,6 +37,7 @@ const root = document.getElementById("app")!;
 let state: State = { phase: "empty", joke: line("empty"), deep: { status: "idle", claims: [] } };
 let engine: Engine | undefined;
 let abort: AbortController | undefined;
+let pinned = false;
 
 async function getEngine(): Promise<Engine> {
   engine ??= await buildEngine();
@@ -99,7 +100,10 @@ async function runCheck(rawText: string, source: CaptureSource): Promise<void> {
     return;
   }
   const cut = truncate(text, th.max_text_chars);
-  if (cut.truncated) note = note ? `${note} ${line("too_long")}` : line("too_long");
+  if (cut.truncated) {
+    const n = `Text is ${rawText.length.toLocaleString()} characters. Only the first ${cut.text.length.toLocaleString()} were checked.`;
+    note = note ? `${note} ${n}` : n;
+  }
   text = cut.text;
 
   const capture: Capture = { text, source, capturedAt: Date.now() };
@@ -208,9 +212,10 @@ function close(): void {
 function render(): void {
   clear(root);
   root.append(
-    h("div", { class: "head" },
-      h("span", { class: "title" }, "Callout"),
+    h("div", { class: "head", "data-tauri-drag-region": true },
+      h("span", { class: "title", "data-tauri-drag-region": true }, "Callout"),
       h("div", { class: "actions" },
+        h("button", { class: pinned ? "iconbtn on" : "iconbtn", title: pinned ? "Unpin (closes when you click away)" : "Pin (stays open when you click away)", "aria-label": "Pin", "aria-pressed": pinned ? "true" : "false", onClick: () => { pinned = !pinned; void app.setPinned(pinned); render(); } }, "📌"),
         h("button", { class: "iconbtn", title: "Screenshot a region", "aria-label": "Screenshot a region", onClick: () => void app.startScreenshot() }, "▣"),
         h("button", { class: "iconbtn", title: "Settings", "aria-label": "Settings", onClick: () => void app.openSettings() }, "⚙"),
         h("button", { class: "iconbtn", title: "Close (Esc)", "aria-label": "Close", onClick: close }, "✕"),
@@ -268,8 +273,12 @@ function body(): Node[] {
 function deepSection(): Node[] {
   const d = state.deep;
   const out: Node[] = [];
-  if (d.status === "idle") return out;
   out.push(h("p", { class: "section-title" }, "Claims"));
+  if (d.status === "idle") {
+    out.push(h("p", { class: "note" }, state.fast?.factualHiddenReason ? "The deep check can still run on anything checkable in here." : "Nothing checkable stood out, but you can still run the deep check."));
+    out.push(h("div", { class: "row-actions" }, h("button", { class: "btn", onClick: () => void runDeep() }, "Check claims anyway")));
+    return out;
+  }
   if (d.status === "waiting") {
     out.push(h("p", { class: "joke" }, line("deep_waiting")));
     out.push(h("div", { class: "row-actions" }, h("button", { class: "btn primary", onClick: () => void runDeep() }, "Check claims")));

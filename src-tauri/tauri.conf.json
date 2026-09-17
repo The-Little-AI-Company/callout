@@ -19,12 +19,12 @@
         "width": 380,
         "height": 220,
         "decorations": false,
-        "transparent": true,
+        "transparent": false,
         "alwaysOnTop": true,
         "skipTaskbar": true,
         "resizable": false,
         "visible": false,
-        "shadow": false,
+        "shadow": true,
         "focus": true
       }
     ],

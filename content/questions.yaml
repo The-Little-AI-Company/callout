@@ -35,7 +35,7 @@ thresholds:
   max_passages_per_page: 12
   max_search_results_per_query: 5
   min_text_chars: 40
-  max_text_chars: 12000
+  max_text_chars: 50000      # Jev request budget is about 150,000 characters; leaves room for the questions
 
 fast_lane:
   header: "Signals in the text itself. Not a truth check."

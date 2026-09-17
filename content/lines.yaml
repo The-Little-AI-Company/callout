@@ -58,9 +58,6 @@ offline:
 too_short:
   - "That's barely a sentence. Give me a little more to chew on."
 
-too_long:
-  - "That's a whole book. I trimmed it to the first part."
-
 helper_off_input:
   - "Paste text to check. Questions need the helper turned on in settings."
 

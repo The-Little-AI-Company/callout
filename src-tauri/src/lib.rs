@@ -10,7 +10,7 @@ mod screenshot;
 mod windows;
 
 use serde::Serialize;
-use std::sync::Mutex;
+use std::sync::{atomic::{AtomicBool, Ordering}, Mutex};
 use tauri::{
     menu::{Menu, MenuItem},
     tray::{TrayIconBuilder, TrayIconEvent},
@@ -24,6 +24,8 @@ const DEFAULT_HOTKEY: &str = "CommandOrControl+Shift+Space";
 #[derive(Default)]
 pub struct AppState {
     hotkey: Mutex<Option<Shortcut>>,
+    /// When pinned, the popover stays open on focus loss.
+    pinned: AtomicBool,
 }
 
 #[derive(Serialize, Clone)]
@@ -121,6 +123,11 @@ fn try_now(app: AppHandle) {
 }
 
 #[tauri::command]
+fn set_pinned(state: State<'_, AppState>, pinned: bool) {
+    state.pinned.store(pinned, Ordering::Relaxed);
+}
+
+#[tauri::command]
 fn close_settings(app: AppHandle) -> Result<(), String> {
     if let Some(w) = app.get_webview_window("settings") {
         w.close().map_err(|e| format!("{e}"))?;
@@ -212,6 +219,7 @@ pub fn run() {
             close_screenshot,
             try_now,
             close_settings,
+            set_pinned,
         ])
         .setup(|app| {
             let handle = app.handle().clone();
@@ -267,7 +275,10 @@ pub fn run() {
             }
             if let tauri::WindowEvent::Focused(false) = event {
                 if window.label() == "popover" {
-                    let _ = window.hide();
+                    let pinned = window.app_handle().state::<AppState>().pinned.load(Ordering::Relaxed);
+                    if !pinned {
+                        let _ = window.hide();
+                    }
                 }
             }
         })
