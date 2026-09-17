@@ -8,5 +8,5 @@ export default defineConfig({
       "@content": fileURLToPath(new URL("./content", import.meta.url)),
     },
   },
-  test: { include: ["test/**/*.test.ts"], environment: "node", testTimeout: 60000 },
+  test: { include: ["test/**/*.test.ts"], setupFiles: ["test/env.ts"], environment: "node", testTimeout: 60000 },
 });

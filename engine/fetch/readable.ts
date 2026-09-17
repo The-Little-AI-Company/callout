@@ -45,7 +45,7 @@ export class PageFetcher {
         signal: controller.signal,
         redirect: "follow",
         headers: {
-          "user-agent": this.opts.userAgent ?? "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Callout/0.1 (+https://github.com/little-ai-company/callout)",
+          "user-agent": this.opts.userAgent ?? "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Callout/0.1 (+https://github.com/The-Little-AI-Company/callout)",
           accept: "text/html,application/xhtml+xml,text/plain;q=0.9,*/*;q=0.5",
         },
       });

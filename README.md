@@ -35,6 +35,18 @@ the little ai company and Wazoo. Currently in private beta.
 | `test/` | Unit tests, the 20-sample eval set, and the eval runner. |
 | `docs/` | PRD, technical plan, handoff, decisions, assets, setup guide, costs. |
 
+## Keys
+
+Two different places, on purpose:
+
+- **Testers and the shipped app:** no `.env`. Open Settings, paste each key,
+  press Test and save. Keys go to Windows Credential Manager; nothing is
+  written to disk in plain text. The fast lane works with the TypeSafe key
+  alone.
+- **Developers, tests, and the eval script:** copy `.env.example` to `.env`
+  and fill in `TYPESAFE_API_KEY`, `TAVILY_API_KEY`, `DEEPSEEK_API_KEY`. Tests
+  and `npm run eval:samples` read it. Variables already in the shell win.
+
 ## Develop
 
 ```sh

@@ -8,6 +8,7 @@
  * to mark right or wrong), results.json (raw), and costs.md (usage by lane and
  * step, the source for docs/COSTS.md).
  */
+import "../env";
 import { readFileSync, mkdirSync, writeFileSync } from "node:fs";
 import { parseHTML } from "linkedom";
 import { parseQuestionContent } from "../../engine/content";
