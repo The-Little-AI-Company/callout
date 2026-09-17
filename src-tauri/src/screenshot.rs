@@ -10,7 +10,7 @@ use std::sync::Mutex;
 use tauri::{AppHandle, Emitter, Manager, PhysicalPosition, PhysicalSize, WebviewUrl, WebviewWindowBuilder};
 
 #[derive(Serialize, Clone)]
-struct Grab {
+pub struct Grab {
     /// Absolute path of the PNG in the app cache dir.
     path: String,
     width: u32,
@@ -86,13 +86,18 @@ fn open_window(app: &AppHandle, x: i32, y: i32, mw: u32, mh: u32) -> Result<(), 
     Ok(())
 }
 
-/// Called by the screenshot window once its script is listening.
-pub fn send_image(app: &AppHandle) -> Result<(), String> {
-    let grab = PENDING.lock().unwrap().clone();
-    match grab {
-        Some(g) => app.emit_to("screenshot", "callout://screenshot-image", &g).map_err(|e| format!("{e}")),
-        None => Err("no screenshot pending".into()),
-    }
+/// Called by the screenshot window once its script runs. Returns the grab
+/// directly (no event race).
+pub fn pending() -> Result<Grab, String> {
+    PENDING.lock().unwrap().clone().ok_or_else(|| "no screenshot pending".to_string())
+}
+
+/// Fallback when the asset protocol cannot serve the file: the PNG as a data URL.
+pub fn data_url() -> Result<String, String> {
+    use base64::Engine as _;
+    let g = pending()?;
+    let bytes = std::fs::read(&g.path).map_err(|e| format!("{e}"))?;
+    Ok(format!("data:image/png;base64,{}", base64::engine::general_purpose::STANDARD.encode(bytes)))
 }
 
 pub fn close(app: &AppHandle) -> Result<(), String> {

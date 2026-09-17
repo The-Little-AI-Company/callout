@@ -538,6 +538,7 @@ dependencies = [
 name = "callout"
 version = "0.1.0"
 dependencies = [
+ "base64 0.22.1",
  "enigo",
  "env_logger",
  "image",

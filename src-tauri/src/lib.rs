@@ -100,8 +100,13 @@ fn start_screenshot(app: AppHandle) -> Result<(), String> {
 }
 
 #[tauri::command]
-fn screenshot_ready(app: AppHandle) -> Result<(), String> {
-    screenshot::send_image(&app)
+fn screenshot_ready() -> Result<screenshot::Grab, String> {
+    screenshot::pending()
+}
+
+#[tauri::command]
+fn screenshot_data_url() -> Result<String, String> {
+    screenshot::data_url()
 }
 
 #[tauri::command]
@@ -215,6 +220,7 @@ pub fn run() {
             set_hotkey,
             start_screenshot,
             screenshot_ready,
+            screenshot_data_url,
             screenshot_done,
             close_screenshot,
             try_now,

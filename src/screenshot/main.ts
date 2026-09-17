@@ -3,7 +3,7 @@
  * drags a rectangle; the crop is emitted to the popover as base64 PNG.
  */
 import { h } from "../dom";
-import { listen, emit, invoke, isTauri } from "../app/tauri";
+import { emit, invoke, isTauri } from "../app/tauri";
 import { convertFileSrc } from "@tauri-apps/api/core";
 
 interface Grab {
@@ -63,9 +63,28 @@ root.addEventListener("mouseup", async (e) => {
   else window.close();
 });
 
-void listen<Grab>("callout://screenshot-image", (g) => {
-  grab = g;
-  img.src = isTauri() ? convertFileSrc(g.path) : g.path;
-});
+const hint = root.querySelector(".hint") as HTMLElement;
 
-if (isTauri()) void invoke("screenshot_ready");
+async function loadGrab(): Promise<void> {
+  if (!isTauri()) return;
+  try {
+    grab = await invoke<Grab>("screenshot_ready");
+  } catch (e) {
+    hint.textContent = `Screenshot failed: ${String(e)}. Press Esc.`;
+    return;
+  }
+  // Try the asset protocol first (no big payload); fall back to a data URL.
+  img.onerror = async () => {
+    img.onerror = () => {
+      hint.textContent = "Could not load the screenshot. Press Esc.";
+    };
+    try {
+      img.src = await invoke<string>("screenshot_data_url");
+    } catch (e) {
+      hint.textContent = `Could not load the screenshot: ${String(e)}. Press Esc.`;
+    }
+  };
+  img.src = convertFileSrc(grab.path);
+}
+
+void loadGrab();
