@@ -100,6 +100,47 @@ pub fn data_url() -> Result<String, String> {
     Ok(format!("data:image/png;base64,{}", base64::engine::general_purpose::STANDARD.encode(bytes)))
 }
 
+#[derive(serde::Deserialize)]
+pub struct Rect {
+    pub x: u32,
+    pub y: u32,
+    pub w: u32,
+    pub h: u32,
+}
+
+#[derive(Serialize, Clone)]
+struct Crop {
+    png: String,
+}
+
+/// Crop the pending grab in Rust (the webview canvas is tainted by the
+/// asset-protocol image), send the crop to the popover, close the overlay,
+/// bring the popover back. Always closes the overlay, even on error.
+pub fn finish(app: &AppHandle, rect: Rect) -> Result<(), String> {
+    use base64::Engine as _;
+    let result = (|| -> Result<String, String> {
+        let g = pending()?;
+        let mut img = image::open(&g.path).map_err(|e| format!("{e}"))?;
+        let x = rect.x.min(g.width.saturating_sub(1));
+        let y = rect.y.min(g.height.saturating_sub(1));
+        let w = rect.w.max(1).min(g.width - x);
+        let h = rect.h.max(1).min(g.height - y);
+        let crop = img.crop(x, y, w, h);
+        let mut buf = Vec::new();
+        crop.write_to(&mut std::io::Cursor::new(&mut buf), image::ImageFormat::Png).map_err(|e| format!("{e}"))?;
+        Ok(base64::engine::general_purpose::STANDARD.encode(buf))
+    })();
+    let _ = close(app);
+    let _ = crate::windows::show_popover_at_cursor(app);
+    match result {
+        Ok(png) => app.emit_to("popover", "callout://screenshot", &Crop { png }).map_err(|e| format!("{e}")),
+        Err(e) => {
+            let _ = app.emit_to("popover", "callout://screenshot-error", &e);
+            Err(e)
+        }
+    }
+}
+
 pub fn close(app: &AppHandle) -> Result<(), String> {
     if let Some(g) = PENDING.lock().unwrap().take() {
         let _ = std::fs::remove_file(g.path);

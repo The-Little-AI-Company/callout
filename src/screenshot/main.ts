@@ -3,7 +3,7 @@
  * drags a rectangle; the crop is emitted to the popover as base64 PNG.
  */
 import { h } from "../dom";
-import { emit, invoke, isTauri } from "../app/tauri";
+import { invoke, isTauri } from "../app/tauri";
 import { convertFileSrc } from "@tauri-apps/api/core";
 
 interface Grab {
@@ -50,17 +50,20 @@ root.addEventListener("mouseup", async (e) => {
   const hgt = Math.abs(e.clientY - start.y);
   start = undefined;
   if (w < 8 || hgt < 8) return;
+  hint.textContent = "Reading the selection.";
+  // Map CSS pixels to image pixels; Rust does the crop.
   const sx = grab.width / window.innerWidth;
   const sy = grab.height / window.innerHeight;
-  const canvas = document.createElement("canvas");
-  canvas.width = Math.round(w * sx);
-  canvas.height = Math.round(hgt * sy);
-  const ctx = canvas.getContext("2d")!;
-  ctx.drawImage(img, x * sx, y * sy, w * sx, hgt * sy, 0, 0, canvas.width, canvas.height);
-  const png = canvas.toDataURL("image/png").split(",")[1] ?? "";
-  await emit("callout://screenshot", { png });
-  if (isTauri()) await invoke("screenshot_done");
-  else window.close();
+  const rect = { x: Math.round(x * sx), y: Math.round(y * sy), w: Math.round(w * sx), h: Math.round(hgt * sy) };
+  if (!isTauri()) {
+    window.close();
+    return;
+  }
+  try {
+    await invoke("screenshot_done", { rect });
+  } catch (err) {
+    hint.textContent = `Crop failed: ${String(err)}. Press Esc.`;
+  }
 });
 
 const hint = root.querySelector(".hint") as HTMLElement;

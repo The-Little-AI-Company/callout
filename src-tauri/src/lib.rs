@@ -110,9 +110,8 @@ fn screenshot_data_url() -> Result<String, String> {
 }
 
 #[tauri::command]
-fn screenshot_done(app: AppHandle) -> Result<(), String> {
-    screenshot::close(&app)?;
-    windows::show_popover_at_cursor(&app)
+fn screenshot_done(app: AppHandle, rect: screenshot::Rect) -> Result<(), String> {
+    screenshot::finish(&app, rect)
 }
 
 #[tauri::command]
