@@ -7,8 +7,8 @@ lane, a few seconds). Unsure is a real answer. Nothing is shown without a
 source. The header on every result: **Signals in the text itself. Not a truth
 check.**
 
-Windows tray app, open source (MIT), bring your own keys. A joint product of
-the little ai company and Wazoo. Currently in private beta.
+Windows tray app, open source (MIT), bring your own keys. Made by The Little
+AI Company. In private beta.
 
 ## How it works
 

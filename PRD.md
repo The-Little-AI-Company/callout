@@ -39,7 +39,7 @@ keys once, with guided setup.
 | License | Open source, MIT |
 | Privacy | Local history off by default; text leaves the machine only to user-configured APIs |
 | Search API | Tavily |
-| Ownership | A joint product of the little ai company and Wazoo (Jeff and Ethan). Brand and spelling to be confirmed by both partners before the landing page ships |
+| Ownership | The Little AI Company |
 | Distribution of build 1 | Private beta behind a signup form on a landing page. No public download until the section 9 gates pass |
 | LLM helper default model | DeepSeek V4.1 Flash for vision and extraction; user-switchable in settings |
 | LLM helper | Optional, user-enabled. Handles what Jev cannot: seeing screenshots, transcribing video, cleaning messy input, answering follow-up questions. Jev is text and JSON only, confirmed in the Typesafe docs on 2026-09-17 |

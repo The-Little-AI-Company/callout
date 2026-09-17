@@ -9,7 +9,7 @@ next to it, or copy them into the new repo under `docs/`.
 You are building Callout, a Windows tray app on a global hotkey that tells an
 everyday reader whether the text they are looking at is trying to manipulate
 them and whether its claims hold up against real sources. It is a standalone
-open-source product (MIT) from the little ai company and Wazoo. It is unrelated
+open-source product (MIT) from The Little AI Company. It is unrelated
 to any other project on this machine; do not read or touch other repositories.
 
 Read first, in this order, before writing any code:
