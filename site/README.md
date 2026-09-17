@@ -25,7 +25,7 @@ git push origin v0.2.0
 The `build` workflow tests, builds the Windows installer, and creates the
 GitHub Release with `Callout-Setup.exe` and `Callout.msi` attached.
 
-## Beta signup (optional)
+## Signup (optional)
 
 `api/signup.ts` is a Resend-backed serverless signup handler from the private
 beta plan (PRD 10a), written for Vercel-style hosting. GitHub Pages cannot run
@@ -33,5 +33,5 @@ it, and the app is public now, so the page links to GitHub Releases and Issues
 instead. Keep the function if a waitlist is wanted later; its environment is
 documented in the file header and in `.env.example`.
 
-Assets under `assets/` are listed in `docs/ASSETS.md`. Until the partners'
+Assets under `assets/` are listed in `docs/ASSETS.md`. Until the
 art lands, `placeholder-mascot.svg` stands in.

@@ -78,7 +78,7 @@ waitlist:
   - "Wave one is full. You're on the list, and you'll hear from us when wave two opens."
 
 signup_confirm_subject:
-  - "You're in the Callout beta queue"
+  - "You're on the Callout list"
 
 release_notes_tagline:
   - "Now with fewer bugs and the same amount of plushy."

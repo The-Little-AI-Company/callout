@@ -1,4 +1,4 @@
-# Setting up Callout (beta testers)
+# Setting up Callout
 
 Callout runs on your machine with your own API keys. There is no Callout
 account. Setup is three keys, one of them required.

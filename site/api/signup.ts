@@ -67,7 +67,7 @@ export default async function handler(req: IncomingMessage & { body?: unknown },
     }
 
     const waitlist = wave === "waitlist";
-    const subject = waitlist ? "You're on the Callout waitlist" : "You're in the Callout beta queue";
+    const subject = waitlist ? "You're on the Callout waitlist" : "You're on the Callout list";
     const text = waitlist
       ? "Wave one is full. You're on the list, and you'll hear from us when wave two opens.\n\nCallout uses your own API keys and never sends checked text to us. More at the landing page.\n\nThe skullbunny sends its regards."
       : "You're in the queue for wave one. Invites go out in order with a download link, a setup guide for the three keys, and a feedback link.\n\nCallout uses your own API keys and never sends checked text to us.\n\nThe skullbunny is sniffing for hogwash on your behalf.";
@@ -107,7 +107,7 @@ export function validate(body: unknown): Signup | { error: string } {
   if (!os) return { error: "Pick an operating system." };
   const allowed = new Set(["news", "social", "ads", "chat", "docs", "video"]);
   const reads = Array.isArray(b.reads) ? b.reads.filter((r): r is string => typeof r === "string" && allowed.has(r)) : [];
-  if (b.consent !== true) return { error: "Consent is required so we can email you about the beta." };
+  if (b.consent !== true) return { error: "Consent is required so we can email you about Callout." };
   return { email, os, reads, consent: true };
 }
 
