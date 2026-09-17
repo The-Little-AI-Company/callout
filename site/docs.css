@@ -1,0 +1,47 @@
+/* Docs layout on top of styles.css: a sticky contents rail and readable prose. */
+.docs { display: grid; grid-template-columns: 15rem minmax(0, 1fr); gap: clamp(2rem, 4.4vw, 4rem); padding: clamp(2rem, 4vw, 3.5rem) 0 5rem; }
+.rail { position: sticky; top: 6rem; align-self: start; font-size: var(--t-sm); }
+.rail .cap { margin: 0 0 0.75rem; }
+.rail nav { display: flex; flex-direction: column; }
+.rail nav a { padding: 0.45rem 0; border-top: 1px solid var(--rule-soft); color: var(--text-2); }
+.rail nav a:first-child { border-top: 0; }
+.rail nav a:hover, .rail nav a[aria-current="page"] { color: var(--text); }
+.rail .sub { display: flex; flex-direction: column; margin: 0.25rem 0 0.5rem 0.75rem; }
+.rail .sub a { border: 0; padding: 0.2rem 0; font-size: var(--t-xs); color: var(--text-3); }
+.prose { min-width: 0; max-width: 72ch; }
+.prose h1 { margin: 0 0 1rem; }
+.prose h2 { font-family: var(--display); font-weight: 700; font-size: clamp(1.5rem, 2.4vw, 2rem); line-height: 1.05; margin: 3rem 0 1rem; padding-top: 1.5rem; border-top: 1px solid var(--rule-soft); }
+.prose h3 { font-family: var(--mono); font-weight: 600; font-size: 1rem; margin: 2rem 0 0.5rem; color: var(--text); }
+.prose p, .prose li { color: var(--text-2); line-height: 1.7; }
+.prose p strong, .prose li strong { color: var(--text); font-weight: 600; }
+.prose ul, .prose ol { padding-left: 1.25rem; }
+.prose li { margin: 0.35rem 0; }
+.prose a { color: var(--text); text-decoration: underline; text-underline-offset: 4px; }
+.prose a:hover { color: var(--text-2); }
+.prose pre { margin: 1rem 0; padding: 1rem 1.25rem; background: var(--pane); border: 1px solid var(--rule); overflow-x: auto; font-size: var(--t-xs); line-height: 1.6; color: var(--text); }
+.prose pre code { border: 0; padding: 0; background: transparent; }
+.prose table { border-collapse: collapse; width: 100%; font-size: var(--t-sm); margin: 1rem 0; }
+.prose th, .prose td { text-align: left; vertical-align: top; padding: 0.55rem 0.75rem; border-top: 1px solid var(--rule-soft); }
+.prose th { color: var(--amber); font-weight: 500; }
+.prose td { color: var(--text-2); }
+.prose td:first-child { color: var(--text); white-space: nowrap; }
+.prose .note { padding: 0.9rem 1.1rem; border-left: 2px solid var(--amber); background: var(--pane); color: var(--text-2); margin: 1rem 0; }
+.prose .note.lime { border-left-color: var(--lime); }
+.prose .verdicts li { list-style: none; margin: 0.5rem 0; padding-left: 1.4rem; position: relative; }
+.prose .verdicts li::before { content: ""; position: absolute; left: 0; top: 0.55em; width: 0.6rem; height: 0.6rem; border-radius: 50%; background: var(--text-3); }
+.prose .verdicts li.green::before { background: var(--green); }
+.prose .verdicts li.red::before { background: var(--red); }
+.prose .verdicts li.amber::before { background: var(--amber); }
+.prose .verdicts li.hollow::before { background: transparent; border: 2px solid var(--red); box-sizing: border-box; }
+.prose .verdicts li.hollow-green::before { background: transparent; border: 2px solid var(--green); box-sizing: border-box; }
+.prose kbd { font-family: var(--mono); font-size: 0.9em; padding: 0.05em 0.45em; border: 1px solid var(--rule); background: var(--pane); color: var(--text); }
+.pager { display: flex; justify-content: space-between; gap: 1rem; margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--rule-soft); font-size: var(--t-sm); }
+.pager a { color: var(--text-2); }
+.pager a:hover { color: var(--text); }
+@media (max-width: 900px) {
+  .docs { grid-template-columns: 1fr; }
+  .rail { position: static; }
+  .rail nav { flex-direction: row; flex-wrap: wrap; gap: 0.25rem 1rem; }
+  .rail nav a { border: 0; padding: 0.25rem 0; }
+  .rail .sub { display: none; }
+}

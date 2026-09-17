@@ -77,8 +77,23 @@ you configure and to the pages Callout fetches for evidence. Keys sit in the
 Windows credential store. History is off by default. Usage counters are
 always on and stay on your machine.
 
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md). Most improvements are edits to the
+three files under `content/`, no TypeScript required. The honesty rules are
+not negotiable and pull requests that bend them are closed.
+
+## License
+
+MIT, copyright Jeff Kazzee. Use the code in anything, open or closed,
+commercial or not. Keep the copyright notice with the code and with any
+substantial part you reuse; that notice is the attribution. Full text and a
+one-line attribution example in [LICENSE](LICENSE) and on the
+[site](https://the-little-ai-company.github.io/callout/docs/license.html).
+
 ## Docs
 
+- Site docs: [Using Callout](https://the-little-ai-company.github.io/callout/docs/using.html), [How it works](https://the-little-ai-company.github.io/callout/docs/how-it-works.html).
 - `docs/PRD.md` and `docs/PLAN.md`: what and how, binding.
 - `docs/DECISIONS.md`: stack choices and their reasons.
 - `docs/SETUP.md`: tester guide to the three keys.

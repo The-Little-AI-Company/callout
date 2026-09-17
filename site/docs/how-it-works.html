@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>How Callout works</title>
+    <meta name="description" content="Two models with different jobs, the fast lane battery, the deep lane pipeline, the roll-up rules, the BS meter, and the honesty rules." />
+    <link rel="icon" href="../assets/placeholder-mascot.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Fraunces:ital,opsz,wght,SOFT,WONK@1,9..144,400,30,1&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../styles.css" />
+    <link rel="stylesheet" href="../docs.css" />
+  </head>
+  <body>
+    <header class="top">
+      <div class="wrap">
+        <a class="brand" href="../"><img src="../assets/placeholder-mascot.svg" alt="" />Callout</a>
+        <nav>
+          <a href="./" aria-current="page">Docs</a>
+          <a href="../#download">Download</a>
+          <a href="https://github.com/The-Little-AI-Company/callout">Source</a>
+        </nav>
+      </div>
+    </header>
+    <main>
+      <div class="wrap docs">
+        <aside class="rail">
+          <p class="cap">Docs</p>
+          <nav>
+            <a href="./">Overview</a>
+            <a href="using.html">Using Callout</a>
+            <a href="how-it-works.html" aria-current="page">How it works</a>
+            <div class="sub">
+              <a href="#split">Two models, two jobs</a>
+              <a href="#fast">Fast lane</a>
+              <a href="#deep">Deep lane</a>
+              <a href="#rollup">Roll-up rules</a>
+              <a href="#judgement">Helper judgement</a>
+              <a href="#meter">The meter</a>
+              <a href="#honesty">Honesty rules</a>
+              <a href="#shell">The shell</a>
+              <a href="#network">What leaves your machine</a>
+              <a href="#gaps">Known gaps</a>
+            </div>
+            <a href="contributing.html">Contributing</a>
+            <a href="license.html">License</a>
+          </nav>
+        </aside>
+        <article class="prose">
+          <h1 class="display display-lg">How it works.</h1>
+          <p>Callout is built on one idea: the model that judges should not be the model that writes. A judgment model answers narrow typed questions and returns probabilities. A language model does the reading, extracting, transcribing, and drafting. Code owns the flow, every threshold, and every roll-up. This page walks the whole path from keypress to verdict.</p>
+
+          <h2 id="split">Two models, two jobs</h2>
+          <table>
+            <tr><th>Model</th><th>What it is</th><th>What it does in Callout</th></tr>
+            <tr><td>Jev</td><td>TypeSafe's System One model. Takes a state (text or JSON) and a map of typed questions (yes/no, choice, score) and returns calibrated probabilities. No prose, no world knowledge. Fast.</td><td>Content kind. Every fast-lane signal and persuasion technique. Which sentence shows a technique. Whether a claim is checkable and central. How relevant a passage is. Whether a passage supports, contradicts, or says nothing about a claim. Whether each sentence the helper writes is consistent with the evidence.</td></tr>
+            <tr><td>The helper</td><td>An ordinary LLM. DeepSeek V4.1 Flash by default, or any OpenAI-compatible or Anthropic endpoint.</td><td>Extracts claims with exact quotes. Writes search queries. Reads screenshots. Answers follow-up questions from kept passages. Drafts the write-up. Gives a labelled second opinion from general knowledge where sources are silent.</td></tr>
+          </table>
+          <p>Every question Jev is asked, every label a reader sees, and every threshold lives in one human-readable file, <code>content/questions.yaml</code>. Nothing is inlined in code. The helper's prompts live in <code>content/helper-prompts.yaml</code>. The joke bank is <code>content/lines.yaml</code>, tagged by surface, and is never used in verdict copy.</p>
+
+          <h2 id="fast">Fast lane</h2>
+          <p>One Jev call with everything batched over the captured text. Jev evaluates each question independently and in parallel, so adding questions costs tokens, not time.</p>
+          <ul>
+            <li><strong>Content kind.</strong> A choice: factual claims, opinion, prediction, advertisement, satire or fiction, mixed, none of these. Below a confidence floor the kind is treated as mixed.</li>
+            <li><strong>Six factual signals.</strong> Yes/no questions: pushes to act now, certainty with no proof, numbers with no source, contradicts itself, names a checkable source (shown inverted as "names no checkable source"), attacks people not the point. Shown when the probability clears a threshold, at most five, ordered by probability. Hidden for opinion, satire, ads, and nothing-to-check, with the reason shown.</li>
+            <li><strong>Thirty-four persuasion techniques.</strong> One yes/no question each, across seven families: emotional pressure, faulty reasoning, authority and crowd, numbers games, framing, commercial and dark patterns, source games. Each question carries a definition, what it is not for, and examples. Shown for every content kind. At most four, ordered by probability.</li>
+            <li><strong>Manipulation level.</strong> A score over four described levels: straightforward, persuasive but fair, leans on you, built to mislead. The top level is what is shown.</li>
+            <li><strong>Worth a deep check.</strong> A choice that decides whether the deep lane starts on its own.</li>
+          </ul>
+          <p>Jev returns probabilities, not spans. To quote the sentence that shows a technique, code splits the text into numbered sentences and makes a second, small call: one choice per detected technique over the sentence list, with a none option. That call only runs for techniques above the display threshold.</p>
+
+          <h2 id="deep">Deep lane</h2>
+          <p>A pipeline, every step owned by code. Verdicts stream into the popover as each claim finishes.</p>
+          <ol>
+            <li><strong>Extract claims.</strong> The helper returns atomic, checkable claims, each with the exact quote it came from. Code drops any claim whose quote is not a substring of the text, after normalizing whitespace and curly quotes. Without the helper, sentences containing a number or a link become the candidates.</li>
+            <li><strong>Gate the claims.</strong> One Jev call asks, per claim, whether it is checkable, whether it is central to the text, and whether the claim faithfully restates its quote. Not checkable and incidental claims are shown but not fetched for.</li>
+            <li><strong>Gather evidence, cited sources first.</strong> Links in the text and, for a page capture, the page itself are fetched before any search. Pages are fetched through the app's own HTTP layer, reduced to readable article text, and reported honestly when they are paywalled, blocked, empty, or not HTML.</li>
+            <li><strong>Fabricated quote check.</strong> If the text attributes quoted words to a source it links, and that source fetched cleanly, and the words are not in it, the row is red with "Quote not in source". No model is involved.</li>
+            <li><strong>Web search.</strong> The helper writes up to two neutral queries per claim. Tavily runs them. Results are fetched up to a per-claim page cap. When a result page cannot be fetched, Tavily's own snippet from that URL stands in as a passage.</li>
+            <li><strong>Rerank.</strong> Each page is split into passages. One Jev call per claim scores every passage's relevance on four described levels. The top few above a floor are kept.</li>
+            <li><strong>Judge support.</strong> One Jev call per claim asks, per kept passage, whether it supports, contradicts, or says nothing about the claim, with a confidence.</li>
+            <li><strong>Roll up in code.</strong> See below.</li>
+            <li><strong>Helper judgement and write-up.</strong> See below.</li>
+          </ol>
+
+          <h2 id="rollup">Roll-up rules</h2>
+          <p>The confidence threshold starts at 0.8, the value from TypeSafe's citation-check cookbook, and is stamped on every verdict so it can change without re-running anything.</p>
+          <ul>
+            <li>Any contradiction at or above the threshold wins: <strong>Contradicted</strong>.</li>
+            <li>Otherwise, support at or above the threshold with no contradiction at all: <strong>Supported</strong>.</li>
+            <li>Support and contradiction both present, neither decisive: <strong>Mixed</strong>.</li>
+            <li>Evidence leans one way but below the threshold: <strong>Unsure</strong>, reason "judgment not confident", with the passage still shown.</li>
+            <li>Passages kept but all say nothing: <strong>Unsupported</strong>.</li>
+            <li>Nothing could be fetched or nothing was relevant: <strong>Unsure</strong>, with the specific reason.</li>
+          </ul>
+          <p>Confidence bands are words: strong evidence when more than one passage agrees at threshold, some evidence when one does, can't tell otherwise.</p>
+
+          <h2 id="judgement">Helper judgement</h2>
+          <p>Jev has no knowledge of the world. An invented story with no web coverage produces no contradicting source, so every claim would land gray. That is the case the product exists for, so after the sourced pass the helper reads the text plus the sourced verdicts and best passages and gives, per claim, <em>likely false</em>, <em>likely true</em>, or <em>can't tell</em>, with a one-line reason. It also calls the text's intent (honest, careless, deceptive, unclear) and drafts a two-to-three-sentence write-up.</p>
+          <p>Three rules keep this honest. The call is shown with a hollow dot and the words "from the helper's general knowledge, no source fetched", never the solid color of a sourced verdict. It never overrides a sourced verdict. And the write-up goes back to Jev, one yes/no question per sentence: is this sentence consistent with the verdict list? Sentences that assert a verdict the list does not contain are dropped and the reader is told.</p>
+
+          <h2 id="meter">The meter</h2>
+          <p>Computed in code from the rows. Not-checkable and incidental rows are excluded. A row counts as false if it is contradicted, has a fabricated quote, or carries a helper likely-false call without sourced support. A row counts as true if it is supported, or carries a helper likely-true call without a sourced contradiction. The share is false divided by false plus true.</p>
+          <table>
+            <tr><th>Level</th><th>Rule</th></tr>
+            <tr><td>Pants on fire</td><td>90 percent or more false, or 60 percent or more with deceptive intent.</td></tr>
+            <tr><td>Mostly false</td><td>60 percent or more.</td></tr>
+            <tr><td>Mixed</td><td>Between 10 and 60.</td></tr>
+            <tr><td>Holds up</td><td>10 percent or less, with at least one true row.</td></tr>
+            <tr><td>Nothing judged yet</td><td>No row decided either way and no helper estimate.</td></tr>
+          </table>
+          <p>The number drives the bar width. The reader sees the label and a one-line description. The thresholds and labels are in the content file.</p>
+
+          <h2 id="honesty">Honesty rules</h2>
+          <ul>
+            <li>No verdict without a shown source. Every green and sourced red row has a passage and a link.</li>
+            <li>No sourced red without a contradicting source or a fabricated quote.</li>
+            <li>Helper calls are always labelled as helper calls and drawn differently.</li>
+            <li>Every unsure names its reason.</li>
+            <li>Confidence in words, never numbers, on screen.</li>
+            <li>Every sentence the helper writes for the screen is checked by Jev first.</li>
+            <li>Jokes live in empty states, loading lines, errors, and settings. Never in a verdict, a why, the evidence, a band, or an unsure reason.</li>
+            <li>The header on every fast-lane result stays fixed: Signals in the text itself. Not a truth check.</li>
+          </ul>
+
+          <h2 id="shell">The shell</h2>
+          <p>A Tauri 2 app: a Rust process owning the tray, the global hotkey, the clipboard, the credential store, the screen grab, and three windows (the popover, settings, the screenshot overlay), with the interface and the whole engine in a webview written in plain TypeScript. The engine has no dependency on Tauri or the DOM, which is why it runs under Node for tests and for the sample evaluation.</p>
+          <p>Selection capture works by saving the clipboard, placing a sentinel on it, sending Ctrl+C to the foreground app, polling until the clipboard changes, and restoring the original. If nothing changed, the existing clipboard is used. Screenshots grab the monitor under the cursor on a worker thread, write a PNG to the app cache, show it under a dimmed full-screen overlay, and crop in Rust from the rectangle you draw. All API calls go through the app's own HTTP layer rather than the webview, so no page or service can refuse them on origin grounds.</p>
+
+          <h2 id="network">What leaves your machine</h2>
+          <table>
+            <tr><th>Destination</th><th>What</th><th>When</th></tr>
+            <tr><td>api.typesafe.ai</td><td>The captured text with the question battery; claims and passages for the deep lane; helper sentences for checking.</td><td>Every check.</td></tr>
+            <tr><td>Your LLM provider</td><td>The text for claim extraction and judgement; claims for queries; screenshots for transcription; passages and questions for answers.</td><td>Deep lane and helper features, when a key is saved.</td></tr>
+            <tr><td>api.tavily.com</td><td>Search queries written by the helper.</td><td>Deep lane, when a key is saved.</td></tr>
+            <tr><td>Pages</td><td>Ordinary GET requests to the URLs cited in the text or returned by search, and to YouTube for captions.</td><td>Deep lane and video checks.</td></tr>
+          </table>
+          <p>Nothing else. There is no Callout server. Usage counters, history, and settings are files on your machine. Keys are in Windows Credential Manager.</p>
+
+          <h2 id="gaps">Known gaps</h2>
+          <ul>
+            <li>PDFs are not parsed. A quote cited to a PDF lands as unsure with "sources could not be fetched".</li>
+            <li>JavaScript-only pages and paywalls come back empty or blocked and are reported as such.</li>
+            <li>Videos without captions cannot be checked; frame sampling is not in this version.</li>
+            <li>Without the helper, claim extraction is a crude sentence filter. Precision is unaffected because Jev still judges every passage, but recall is poor.</li>
+            <li>Builds are unsigned. Windows warns on install.</li>
+            <li>Windows only. Mac later.</li>
+          </ul>
+
+          <nav class="pager"><a href="using.html">← Using Callout</a><a href="contributing.html">Contributing →</a></nav>
+        </article>
+      </div>
+    </main>
+    <footer>
+      <div class="wrap">
+        <span>Callout by Jeff Kazzee. A joint product of the little ai company and Wazoo. MIT.</span>
+        <span><a class="link" href="https://github.com/The-Little-AI-Company/callout/issues">Report a problem</a></span>
+      </div>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Using Callout</title>
+    <meta name="description" content="Install Callout, add your keys, press the hotkey, and read a result." />
+    <link rel="icon" href="../assets/placeholder-mascot.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Fraunces:ital,opsz,wght,SOFT,WONK@1,9..144,400,30,1&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../styles.css" />
+    <link rel="stylesheet" href="../docs.css" />
+  </head>
+  <body>
+    <header class="top">
+      <div class="wrap">
+        <a class="brand" href="../"><img src="../assets/placeholder-mascot.svg" alt="" />Callout</a>
+        <nav>
+          <a href="./" aria-current="page">Docs</a>
+          <a href="../#download">Download</a>
+          <a href="https://github.com/The-Little-AI-Company/callout">Source</a>
+        </nav>
+      </div>
+    </header>
+    <main>
+      <div class="wrap docs">
+        <aside class="rail">
+          <p class="cap">Docs</p>
+          <nav>
+            <a href="./">Overview</a>
+            <a href="using.html" aria-current="page">Using Callout</a>
+            <div class="sub">
+              <a href="#install">Install</a>
+              <a href="#keys">Keys</a>
+              <a href="#check">Run a check</a>
+              <a href="#read">Read a result</a>
+              <a href="#input">The input box</a>
+              <a href="#screenshot">Screenshots</a>
+              <a href="#video">Video</a>
+              <a href="#settings">Settings</a>
+              <a href="#trouble">Troubleshooting</a>
+              <a href="#privacy">Privacy</a>
+            </div>
+            <a href="how-it-works.html">How it works</a>
+            <a href="contributing.html">Contributing</a>
+            <a href="license.html">License</a>
+          </nav>
+        </aside>
+        <article class="prose">
+          <h1 class="display display-lg">Using Callout.</h1>
+          <p>Callout is a Windows tray app. It has no main window. You press a key over text you are reading and a small popover appears near your cursor with the result. Everything below is about that popover, the settings window, and the three keys that make it go.</p>
+
+          <h2 id="install">Install</h2>
+          <ol>
+            <li>Download <a href="https://github.com/The-Little-AI-Company/callout/releases/latest/download/Callout-Setup.exe">Callout-Setup.exe</a> from the latest release. Windows 10 or 11.</li>
+            <li>Run it. The build is not code-signed yet, so SmartScreen warns. Choose <strong>More info</strong>, then <strong>Run anyway</strong>.</li>
+            <li>The installer closes any older Callout it finds and installs for the current user only. No admin rights needed.</li>
+            <li>Callout starts in the system tray. On first launch, with no keys saved, Settings opens on its own.</li>
+          </ol>
+          <div class="note">Upgrading: run the new installer over the old one. Keys stay in Windows Credential Manager and survive.</div>
+
+          <h2 id="keys">Keys</h2>
+          <p>Callout has no server and no account. It talks to services with keys you own. One is required, two are optional. Each has a link to get a key and a <strong>Test and save</strong> button in Settings that checks the key against the service before storing it.</p>
+          <table>
+            <tr><th>Key</th><th>Needed for</th><th>Where</th></tr>
+            <tr><td>TypeSafe</td><td>Required. The judgment model, Jev. Without it nothing runs.</td><td><a href="https://console.typesafe.ai">console.typesafe.ai</a></td></tr>
+            <tr><td>Tavily</td><td>Web search in the deep lane. Without it, only sources already linked in the text are checked.</td><td><a href="https://app.tavily.com">app.tavily.com</a></td></tr>
+            <tr><td>LLM helper</td><td>Claim extraction, screenshots, questions, the write-up, and the helper's own calls. DeepSeek by default. Any OpenAI-compatible or Anthropic endpoint works.</td><td><a href="https://platform.deepseek.com">platform.deepseek.com</a></td></tr>
+          </table>
+          <p>Keys go into the Windows credential store, not a file. Once the TypeSafe key passes its test, Settings shows a <strong>You're set</strong> card with a <strong>Try it now</strong> button that checks whatever is on your clipboard.</p>
+
+          <h2 id="check">Run a check</h2>
+          <ul>
+            <li><strong>Selected text.</strong> Highlight text in any app and press <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Space</kbd>. Callout copies the selection, restores your clipboard, and opens the popover near the cursor.</li>
+            <li><strong>Clipboard.</strong> With nothing selected, the key checks whatever is on the clipboard. Left-clicking the tray icon does the same.</li>
+            <li><strong>A link.</strong> Copy a URL and press the key. Callout fetches the page, extracts the readable text, and checks that.</li>
+            <li><strong>Paste.</strong> Type or paste into the box at the bottom of the popover and press Enter.</li>
+          </ul>
+          <p>The popover closes when you click elsewhere or press <kbd>Esc</kbd>. The pin button in the header keeps it open. Drag it by its header.</p>
+
+          <h2 id="read">Read a result</h2>
+          <p>Results arrive in two stages. The fast lane appears in under a second. The deep lane fills in below it over the next few seconds.</p>
+
+          <h3>The header</h3>
+          <p>Every result starts with <strong>Signals in the text itself. Not a truth check.</strong> That line is fixed. It reminds you that the first section describes the text's shape, not whether it is true.</p>
+
+          <h3>Kind</h3>
+          <p>What the text is mostly doing: makes factual claims, reads as opinion, prediction, advertisement, satire or fiction, mixed, or nothing to check. For opinion, satire, ads, and nothing-to-check, the factual signals are hidden and the reason is shown. Persuasion signals still show, because technique is independent of truth.</p>
+
+          <h3>Signals</h3>
+          <p>Up to five, in plain words, each with a one-line why. Pushes you to act now. Very sure, shows no proof. Numbers with no source. Contradicts itself. Names no checkable source. Attacks people, not the point.</p>
+
+          <h3>How it's trying to persuade you</h3>
+          <p>An overall level in words (straightforward, persuasive but fair, leans on you, built to mislead) and up to four techniques from a battery of thirty-four, each with the sentence from the text that shows it. Open <em>more</em> under a technique for the textbook name and family.</p>
+
+          <h3>The BS meter</h3>
+          <p>A gauge over the whole text, computed from the claim verdicts below it. It shows a label, never a number.</p>
+          <table>
+            <tr><th>Label</th><th>Means</th><th>Shows</th></tr>
+            <tr><td>Pants on fire</td><td>Nearly everything checkable is false, or most of it is and the text is built to deceive.</td><td>a flame</td></tr>
+            <tr><td>Mostly false</td><td>Most of what is checkable is false.</td><td>smoke</td></tr>
+            <tr><td>Mixed</td><td>Some of it is false or unsupported.</td><td>a plain gauge</td></tr>
+            <tr><td>Holds up</td><td>What is checkable holds up.</td><td>a halo</td></tr>
+            <tr><td>Nothing judged yet</td><td>No claim could be judged.</td><td>a gray dot</td></tr>
+          </table>
+
+          <h3>Claim rows</h3>
+          <p>Each checkable claim is a row with a dot, a verdict, a confidence in words (strong evidence, some evidence, can't tell), and a one-line why. Two kinds of verdict appear, and they look different on purpose.</p>
+          <ul class="verdicts">
+            <li class="green"><strong>Supported.</strong> A fetched source supports this and none contradict it. Solid green.</li>
+            <li class="red"><strong>Contradicted.</strong> A fetched source contradicts this. Solid red.</li>
+            <li class="red"><strong>Quote not in source.</strong> The text quotes a source, and the quote is not in that source. Solid red.</li>
+            <li class="amber"><strong>Mixed.</strong> Sources found, but they disagree or support is weak. Amber.</li>
+            <li><strong>Unsupported.</strong> Sources were fetched, none address this claim. Gray.</li>
+            <li><strong>Unsure.</strong> Always with a reason: no source found, source paywalled, evidence off-topic, judgment not confident, offline, no search key. Gray.</li>
+            <li><strong>Not checkable.</strong> Opinion, prediction, or too vague. Gray.</li>
+            <li class="hollow"><strong>Helper: Likely false.</strong> No source decided it, so the helper made a call from general knowledge. Hollow red, with the words "from the helper's general knowledge, no source fetched" and its reason.</li>
+            <li class="hollow-green"><strong>Helper: Likely true.</strong> Same, the other way. Hollow green.</li>
+          </ul>
+          <p>A helper call never overrides a sourced verdict. If a source contradicts a claim, the row is solid red no matter what the helper thinks.</p>
+          <p>Tap a row to open the evidence: the quote from the original text, the best source passage, a link to it, how many passages were judged and how they split, and the confidence threshold in force.</p>
+
+          <h3>The write-up</h3>
+          <p>Two or three plain sentences at the end saying what is false and what is true, plus an intent call: honest, careless, deceptive, or unclear. The helper drafts it, and the judgment model checks each sentence against the verdict list. A sentence that asserts something the list does not is dropped and you are told so.</p>
+
+          <h2 id="input">The input box</h2>
+          <p>The box at the bottom does two jobs.</p>
+          <ul>
+            <li><strong>Check something else.</strong> Paste text or a URL and press Enter. Useful for text you cannot select: a locked PDF, an image caption, a chat app that blocks copying.</li>
+            <li><strong>Ask about what is on screen.</strong> After a deep check finishes, type a question such as <em>is the 40 percent figure real?</em> or <em>who actually said this?</em> The helper answers only from the passages the judgment model already kept for this check, and every sentence of the answer is checked. Anything it cannot tie to the evidence shows as "Not in the evidence". Needs the helper on.</li>
+          </ul>
+
+          <h2 id="screenshot">Screenshots</h2>
+          <p>The screenshot button in the popover header dims your screen. Drag a rectangle over the text, image, or chart you want checked. The helper's vision model transcribes it, the result is labelled as transcribed, and the check runs on that text. Needs the helper on. <kbd>Esc</kbd> cancels.</p>
+
+          <h2 id="video">Video</h2>
+          <p>Copy a YouTube link and press the key. Callout fetches the video's caption track, prefers a human English track over an automatic one, and checks the transcript. The result says it came from captions. Videos without captions cannot be checked in this version.</p>
+
+          <h2 id="settings">Settings</h2>
+          <p>Open from the tray menu, the gear in the popover, or the Settings item on first launch.</p>
+          <table>
+            <tr><th>Setting</th><th>What it does</th></tr>
+            <tr><td>Keys</td><td>Three cards with Test and save, Remove, and a link to get a key.</td></tr>
+            <tr><td>Helper provider</td><td>Preset (DeepSeek OpenAI format, DeepSeek Anthropic format, Anthropic, OpenAI-compatible, custom), base URL, model, an optional stronger model for the write-up, and the wire format.</td></tr>
+            <tr><td>Helper on</td><td>On whenever an LLM key is saved. Turn it off to run without screenshots, questions, write-ups, or helper calls.</td></tr>
+            <tr><td>Hotkey</td><td>Click the field and press the combination you want. At least one modifier or a function key.</td></tr>
+            <tr><td>Auto deep check</td><td>Start the deep lane on its own when the fast lane says the text is worth it. Off means a Check claims button instead.</td></tr>
+            <tr><td>History</td><td>Off by default. On, it keeps text, verdicts, sources, and usage locally, with one-click clear.</td></tr>
+            <tr><td>Caps</td><td>Claims per check and pages per claim. Lower them to spend less.</td></tr>
+            <tr><td>Usage</td><td>Calls and tokens per service, always on, never sent anywhere. Enter your providers' prices to see an estimated cost.</td></tr>
+            <tr><td>Feedback report</td><td>Copies a report with the build number, settings, usage, and verdict counts. Checked text is included only if you tick the box.</td></tr>
+          </table>
+
+          <h2 id="trouble">Troubleshooting</h2>
+          <ul>
+            <li><strong>SmartScreen blocks the installer.</strong> More info, then Run anyway. The build is unsigned for now.</li>
+            <li><strong>Two Callout icons in the tray.</strong> Two copies are running, usually an old build plus a new one. Right-click each and Quit, then start Callout once. Builds from 0.2.0 on close the old copy during install and refuse to run twice.</li>
+            <li><strong>The popover disappears when I click.</strong> That is by design. Press the pin in the header to keep it open.</li>
+            <li><strong>"No LLM key is saved" when I press the screenshot button.</strong> Add a key under LLM helper in Settings. If a key is saved and the message says the helper is off, turn the switch on.</li>
+            <li><strong>Every row is gray.</strong> No source addressed the claims and the helper is off, so nothing could decide. Add the Tavily and helper keys.</li>
+            <li><strong>Nothing happens on the hotkey.</strong> Another app may own that combination. Change it in Settings, or click the tray icon.</li>
+            <li><strong>A page comes back as unreadable.</strong> Paywalled, sign-in walls, and JavaScript-only pages cannot be fetched. The row says which. Paste the text instead.</li>
+          </ul>
+
+          <h2 id="privacy">Privacy</h2>
+          <p>Text you check goes to the services whose keys you entered (TypeSafe, your LLM provider, Tavily) and to the pages Callout fetches for evidence. That is the complete list. There is no Callout server, no account, and no telemetry. Keys sit in Windows Credential Manager. History is off unless you turn it on. Usage counters stay on your machine.</p>
+
+          <nav class="pager"><a href="./">← Overview</a><a href="how-it-works.html">How it works →</a></nav>
+        </article>
+      </div>
+    </main>
+    <footer>
+      <div class="wrap">
+        <span>Callout by Jeff Kazzee. A joint product of the little ai company and Wazoo. MIT.</span>
+        <span><a class="link" href="https://github.com/The-Little-AI-Company/callout/issues">Report a problem</a></span>
+      </div>
+    </footer>
+  </body>
+</html>
