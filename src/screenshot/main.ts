@@ -4,9 +4,11 @@
  */
 import { h } from "../dom";
 import { listen, emit, invoke, isTauri } from "../app/tauri";
+import { convertFileSrc } from "@tauri-apps/api/core";
 
 interface Grab {
-  png: string;
+  /** Absolute path of the full-monitor PNG written by Rust. */
+  path: string;
   width: number;
   height: number;
   scale: number;
@@ -63,7 +65,7 @@ root.addEventListener("mouseup", async (e) => {
 
 void listen<Grab>("callout://screenshot-image", (g) => {
   grab = g;
-  img.src = `data:image/png;base64,${g.png}`;
+  img.src = isTauri() ? convertFileSrc(g.path) : g.path;
 });
 
 if (isTauri()) void invoke("screenshot_ready");

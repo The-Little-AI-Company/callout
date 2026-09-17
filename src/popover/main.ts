@@ -367,6 +367,7 @@ void listen<CapturePayload>("callout://capture", (p) => {
   void runCheck(p.text, { kind: p.kind, url: p.url, title: p.title, helperOutput: false });
 });
 void listen<ScreenshotPayload>("callout://screenshot", (p) => void onScreenshot(p));
+void listen<string>("callout://screenshot-error", (msg) => set({ phase: "error", error: { message: `Screenshot failed: ${msg}`, surface: "error_generic" }, joke: line("error_generic") }));
 void listen<void>("callout://settings-changed", () => {
   engine = undefined;
   render();
