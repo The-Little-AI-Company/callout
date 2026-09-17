@@ -192,6 +192,12 @@ pub fn run() {
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();
 
     tauri::Builder::default()
+        // Must be the first plugin: a second launch (Start menu, installer
+        // relaunch) hands off to the running instance and exits, so there is
+        // never a second tray icon.
+        .plugin(tauri_plugin_single_instance::init(|app, _argv, _cwd| {
+            on_hotkey(app.clone());
+        }))
         .manage(AppState::default())
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_http::init())
