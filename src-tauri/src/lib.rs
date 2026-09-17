@@ -113,6 +113,21 @@ fn close_screenshot(app: AppHandle) -> Result<(), String> {
     screenshot::close(&app)
 }
 
+/// Settings "Try it now": same path as the hotkey, so the popover opens with
+/// whatever is on the clipboard.
+#[tauri::command]
+fn try_now(app: AppHandle) {
+    on_hotkey(app);
+}
+
+#[tauri::command]
+fn close_settings(app: AppHandle) -> Result<(), String> {
+    if let Some(w) = app.get_webview_window("settings") {
+        w.close().map_err(|e| format!("{e}"))?;
+    }
+    Ok(())
+}
+
 fn register_hotkey(app: &AppHandle, state: &AppState, accelerator: &str) -> Result<(), String> {
     let shortcut: Shortcut = accelerator.parse().map_err(|e| format!("{e}"))?;
     let gs = app.global_shortcut();
@@ -195,6 +210,8 @@ pub fn run() {
             screenshot_ready,
             screenshot_done,
             close_screenshot,
+            try_now,
+            close_settings,
         ])
         .setup(|app| {
             let handle = app.handle().clone();

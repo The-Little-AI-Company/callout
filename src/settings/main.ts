@@ -47,6 +47,7 @@ async function testKey(name: SecretName, value: string): Promise<void> {
     if (name === "typesafe") settings.setupDone = true;
     await save();
     keyStatus[name] = { cls: "ok", text: `Works. ${result.ms} ms. Saved to the Windows credential store.` };
+    if (name === "typesafe") setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 50);
   } else {
     keyStatus[name] = { cls: "bad", text: result.error };
   }
@@ -223,8 +224,26 @@ function render(): void {
   const maxPages = h("input", { type: "number", min: "1", max: "10", value: String(settings.caps.maxPagesPerClaim) });
   maxPages.addEventListener("change", () => { settings.caps.maxPagesPerClaim = Number(maxPages.value) || 4; void save(); });
 
+  const hotkeyHuman = settings.hotkey.replace("CommandOrControl", "Ctrl").replace(/\+/g, " + ");
   root.append(
-    h("h1", {}, h("img", { src: mascotUrl, alt: "" }), "Callout settings"),
+    h("div", { style: "display:flex;justify-content:space-between;align-items:center" },
+      h("h1", {}, h("img", { src: mascotUrl, alt: "" }), "Callout settings"),
+      h("button", { class: "btn", onClick: () => void app.closeSettings() }, "Close"),
+    ),
+    keysPresent.typesafe
+      ? h("div", { class: "card", style: "border-color: var(--accent)" },
+          h("h2", {}, "You're set"),
+          h("p", {}, "Highlight any text in any app and press ", h("kbd", {}, hotkeyHuman), ". Or copy a link and press it. Or click the Callout tray icon to check whatever is on the clipboard."),
+          h("p", { class: "small muted" }, keysPresent.tavily ? "Web search is on." : "No Tavily key: claims are checked only against links in the text.", " ", keysPresent.llm && settings.helperOn ? "Helper is on." : "No helper: no screenshots, summaries, or questions."),
+          h("div", { class: "row-actions" },
+            h("button", { class: "btn primary", onClick: () => void app.tryNow() }, "Try it now on the clipboard"),
+            h("button", { class: "btn", onClick: () => void app.closeSettings() }, "Close settings"),
+          ),
+        )
+      : h("div", { class: "card", style: "border-color: var(--amber)" },
+          h("h2", {}, "One key to start"),
+          h("p", {}, "Paste your TypeSafe key below and press Test and save. That is enough for the fast lane. The other two keys are optional and can wait."),
+        ),
     h("p", { class: "joke" }, line("settings_intro")),
     h("div", { class: "card" },
       h("h2", {}, "Privacy"),

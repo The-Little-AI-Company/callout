@@ -225,7 +225,11 @@ function render(): void {
 function body(): Node[] {
   const s = state;
   if (s.phase === "empty") {
-    return [h("div", { class: "empty" }, h("img", { src: mascotUrl, alt: "" }), h("p", { class: "joke" }, s.joke))];
+    const hk = (engine?.settings.hotkey ?? "CommandOrControl+Shift+Space").replace("CommandOrControl", "Ctrl").replace(/\+/g, " + ");
+    return [
+      h("div", { class: "empty" }, h("img", { src: mascotUrl, alt: "" }), h("p", { class: "joke" }, s.joke)),
+      h("p", { class: "note" }, "Highlight text anywhere and press ", h("kbd", {}, hk), ", or paste below."),
+    ];
   }
   if (s.phase === "error") {
     return [h("div", { class: "state" }, h("img", { src: mascotUrl, alt: "" }), h("div", {}, h("p", { class: "error", role: "alert" }, s.error?.message ?? ""), s.joke ? h("p", { class: "joke" }, s.joke) : null))];
