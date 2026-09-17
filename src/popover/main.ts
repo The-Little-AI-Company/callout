@@ -188,7 +188,10 @@ async function askQuestion(question: string): Promise<void> {
 async function onScreenshot(payload: ScreenshotPayload): Promise<void> {
   const eng = await buildEngine();
   if (!eng.llm) {
-    set({ phase: "error", error: { message: line("screenshot_no_helper"), surface: "screenshot_no_helper" }, joke: "" });
+    const message = eng.missing.llm
+      ? "No LLM key is saved, so screenshots cannot be read. Add one under LLM helper in settings."
+      : "The helper is switched off in settings. Turn it on to read screenshots.";
+    set({ phase: "error", error: { message, surface: "screenshot_no_helper" }, joke: line("screenshot_no_helper") });
     return;
   }
   set({ phase: "loading", joke: "Reading the picture.", capture: undefined, fast: undefined, deep: { status: "idle", claims: [] } });

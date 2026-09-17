@@ -7,7 +7,10 @@ export interface Settings {
   hotkey: string;
   autoDeepCheck: boolean;
   historyOn: boolean;
+  /** Legacy flag, ignored. See helperDisabled. */
   helperOn: boolean;
+  /** Explicit opt-out. A saved LLM key turns the helper on unless this is true. */
+  helperDisabled: boolean;
   llmPreset: "deepseek" | "deepseek_anthropic" | "openai_compatible" | "anthropic" | "custom";
   llmWire: "openai" | "anthropic";
   llmBaseURL: string;
@@ -23,7 +26,8 @@ export const DEFAULT_SETTINGS: Settings = {
   hotkey: "CommandOrControl+Shift+Space",
   autoDeepCheck: true,
   historyOn: false,
-  helperOn: false,
+  helperOn: true,
+  helperDisabled: false,
   llmPreset: "deepseek",
   llmWire: "openai",
   llmBaseURL: "https://api.deepseek.com",

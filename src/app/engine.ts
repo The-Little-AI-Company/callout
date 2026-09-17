@@ -63,7 +63,7 @@ export async function buildEngine(): Promise<Engine> {
 
   const jev = typesafeKey ? new JevClient({ apiKey: typesafeKey, usage: log, fetch: httpFetch as never, model: questions.model }) : undefined;
   const search = tavilyKey ? new TavilyClient(tavilyKey, httpFetch as never, log) : undefined;
-  const llm = settings.helperOn && llmKey ? new LlmClient(llmConfig(settings, llmKey), httpFetch as never, log) : undefined;
+  const llm = !settings.helperDisabled && llmKey ? new LlmClient(llmConfig(settings, llmKey), httpFetch as never, log) : undefined;
   const fetcher = new PageFetcher({ fetch: httpFetch as never, parseHtml, cache: pageCache });
 
   return {

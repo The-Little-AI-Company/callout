@@ -288,7 +288,11 @@ pub fn run() {
                 if window.label() == "popover" {
                     let pinned = window.app_handle().state::<AppState>().pinned.load(Ordering::Relaxed);
                     if !pinned {
-                        let _ = window.hide();
+                        // Never call window APIs synchronously inside the event callback.
+                        let w = window.clone();
+                        std::thread::spawn(move || {
+                            let _ = w.hide();
+                        });
                     }
                 }
             }

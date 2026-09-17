@@ -43,10 +43,27 @@ pub fn resize_popover(app: &AppHandle, height: u32) -> Result<(), String> {
     win.set_size(LogicalSize::new(POPOVER_WIDTH, h)).map_err(|e| format!("{e}"))
 }
 
+/// Opening a window from inside an event-loop callback (tray menu, IPC
+/// command on the main thread) can deadlock on Windows. Hand the build to
+/// the main loop from a worker thread so it runs in its own iteration.
 pub fn open_settings(app: &AppHandle) -> Result<(), String> {
     let _ = hide_popover(app);
+    let app = app.clone();
+    std::thread::spawn(move || {
+        let app2 = app.clone();
+        let _ = app.run_on_main_thread(move || {
+            if let Err(e) = build_settings(&app2) {
+                log::warn!("settings window: {e}");
+            }
+        });
+    });
+    Ok(())
+}
+
+fn build_settings(app: &AppHandle) -> Result<(), String> {
     if let Some(w) = app.get_webview_window("settings") {
         w.show().map_err(|e| format!("{e}"))?;
+        w.unminimize().map_err(|e| format!("{e}"))?;
         w.set_focus().map_err(|e| format!("{e}"))?;
         return Ok(());
     }

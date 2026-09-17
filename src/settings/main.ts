@@ -43,7 +43,10 @@ async function testKey(name: SecretName, value: string): Promise<void> {
   if (result.ok) {
     await secrets.set(name, value.trim());
     keysPresent[name] = true;
-    if (name === "llm") settings.helperOn = true;
+    if (name === "llm") {
+      settings.helperOn = true;
+      settings.helperDisabled = false;
+    }
     if (name === "typesafe") settings.setupDone = true;
     await save();
     keyStatus[name] = { cls: "ok", text: `Works. ${result.ms} ms. Saved to the Windows credential store.` };
@@ -142,9 +145,10 @@ function helperFields(): Node {
     settings.llmWire = wire.value as Settings["llmWire"];
     void save();
   });
-  const helperToggle = h("input", { type: "checkbox", checked: settings.helperOn, disabled: !keysPresent.llm, "aria-label": "Helper on" });
+  const helperToggle = h("input", { type: "checkbox", checked: !settings.helperDisabled, disabled: !keysPresent.llm, "aria-label": "Helper on" });
   helperToggle.addEventListener("change", () => {
-    settings.helperOn = (helperToggle as HTMLInputElement).checked;
+    settings.helperDisabled = !(helperToggle as HTMLInputElement).checked;
+    settings.helperOn = !settings.helperDisabled;
     void save();
   });
   return h("div", { style: "display:flex;flex-direction:column;gap:8px;margin-top:6px" },
@@ -203,7 +207,7 @@ async function copyReport(): Promise<void> {
   const history = await readHistory();
   const report = {
     build,
-    settings: { hotkey: settings.hotkey, autoDeepCheck: settings.autoDeepCheck, helperOn: settings.helperOn, helperPreset: settings.llmPreset, model: settings.llmModel, caps: settings.caps },
+    settings: { hotkey: settings.hotkey, autoDeepCheck: settings.autoDeepCheck, helperOn: keysPresent.llm && !settings.helperDisabled, helperPreset: settings.llmPreset, model: settings.llmModel, caps: settings.caps },
     usage: log.byLaneAndStep(),
     checks: history.map((e) => ({ at: new Date(e.at).toISOString(), kind: e.fast.contentKind, signals: e.fast.signals, techniques: e.fast.techniques, level: e.fast.level, verdicts: e.deep?.counts, text: include ? e.text : undefined })),
   };
@@ -234,7 +238,7 @@ function render(): void {
       ? h("div", { class: "card", style: "border-color: var(--accent)" },
           h("h2", {}, "You're set"),
           h("p", {}, "Highlight any text in any app and press ", h("kbd", {}, hotkeyHuman), ". Or copy a link and press it. Or click the Callout tray icon to check whatever is on the clipboard."),
-          h("p", { class: "small muted" }, keysPresent.tavily ? "Web search is on." : "No Tavily key: claims are checked only against links in the text.", " ", keysPresent.llm && settings.helperOn ? "Helper is on." : "No helper: no screenshots, summaries, or questions."),
+          h("p", { class: "small muted" }, keysPresent.tavily ? "Web search is on." : "No Tavily key: claims are checked only against links in the text.", " ", keysPresent.llm && !settings.helperDisabled ? "Helper is on." : "No helper: no screenshots, summaries, or questions."),
           h("div", { class: "row-actions" },
             h("button", { class: "btn primary", onClick: () => void app.tryNow() }, "Try it now on the clipboard"),
             h("button", { class: "btn", onClick: () => void app.closeSettings() }, "Close settings"),
