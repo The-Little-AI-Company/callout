@@ -1,102 +1,132 @@
-# Callout
+<h1 align="center">Callout</h1>
 
-Press a hotkey over anything you are reading. A small popover tells you
-whether the text is trying to manipulate you (fast lane, under a second) and
-whether its specific claims hold up against sources it actually fetched (deep
-lane, a few seconds). Unsure is a real answer. Nothing is shown without a
-source. The header on every result: **Signals in the text itself. Not a truth
-check.**
+<p align="center">
+  A Windows tray app that checks what you are reading.
+</p>
 
-Windows tray app, open source (MIT), bring your own keys. Made by The Little
-AI Company. Download the installer from the
-[latest release](https://github.com/The-Little-AI-Company/callout/releases/latest).
+<p align="center">
+  <a href="https://github.com/The-Little-AI-Company/callout/releases/tag/v0.2.0"><strong>Download for Windows</strong></a> &nbsp;·&nbsp;
+  <a href="https://the-little-ai-company.github.io/callout/">Website</a> &nbsp;·&nbsp;
+  <a href="https://the-little-ai-company.github.io/callout/docs/how-it-works.html">How it works</a>
+</p>
+
+<p align="center">
+  <img src="assets/callout-website-sample.png" alt="A section of the Callout website headed Two lanes, one keypress. Beside the heading is a sample result with a meter labeled Pants on fire and three claims marked contradicted, unsupported and supported." width="900">
+</p>
+
+<p align="center"><sub>The Callout website. The result on the right is a sample drawn in HTML on the site. It is not a capture of the app.</sub></p>
+
+Press a hotkey over anything you are reading. A small popover shows whether the
+text is trying to manipulate you. It then shows whether the specific claims hold
+up against sources it fetched. Unsure is a real answer. The
+header on each result reads **Signals in the text itself. Not a truth check.**
+
+## Download
+
+| Platform | Download | Requires |
+| --- | --- | --- |
+| Windows 10 and 11 | [Callout-Setup.exe](https://github.com/The-Little-AI-Company/callout/releases/download/v0.2.0/Callout-Setup.exe) or [Callout.msi](https://github.com/The-Little-AI-Company/callout/releases/download/v0.2.0/Callout.msi) | A TypeSafe API key |
+
+Version 0.2.0, published 2026-09-17. The build is unsigned, so SmartScreen warns.
+Select **More info**, then **Run anyway**. The installer is 2.8 MB.
+<!-- source: gh api repos/The-Little-AI-Company/callout/releases, asset size 2751405 bytes -->
+
+There is no macOS or Linux build.
+
+## What you can do
+
+- Highlight text anywhere and press **Ctrl+Shift+Space**. You can change the key in Settings.
+- Copy a URL and press the key, or click the tray icon.
+- Read the fast lane: signals in the text and up to four persuasion techniques, each with the sentence that shows it.
+- Read the deep lane: each claim with a traffic light, a one-line reason, and the passage and link behind it.
+- Read a meter, computed in code from the verdicts. It shows words, never a percentage.
+
+## The honesty rules
+
+- **No verdict without a source.** Green needs a supporting source and no contradiction. Red needs a contradicting source or a fabricated quote.
+- **Helper calls are labeled.** When sources are silent, the helper gives a call from general knowledge. It shows as a hollow dot with the words "no source fetched". It never overrides a sourced verdict.
+- **Unsure names its reason.** A gray row says which reason: no source found, source paywalled, evidence off-topic, or judgment not confident.
+- **The jokes stay out of verdicts.** The app can be funny while it loads. It cannot be funny in place of being unsure.
 
 ## How it works
 
-- **Jev** (TypeSafe's System One model) judges: content kind, the
-  manipulation battery, passage relevance, claim-versus-evidence support, and
-  every sentence the helper writes. Jev returns probabilities, never prose.
-- **Code** owns the flow, caps, caches, and every threshold. All of them live
-  in `content/questions.yaml`, which is the only place question wording lives.
-- **The LLM helper** (DeepSeek V4.1 Flash by default, any OpenAI-compatible or
-  Anthropic endpoint) only extracts claims, writes search queries, reads
-  screenshots, transcribes, and drafts the two-sentence summary. It never
-  judges, and every sentence it produces goes back through Jev.
-- **Tavily** finds web evidence after sources cited in the text itself.
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/callout-engine-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="assets/callout-engine-light.svg">
+  <img src="assets/callout-engine-dark.svg" alt="Engine diagram. The hotkey starts two lanes. In the fast lane Jev judges the text and code picks what shows. In the deep lane an LLM helper extracts claims, Tavily and fetched pages supply evidence, and Jev judges support. The helper writes a summary that Jev checks. Both lanes end in the popover." width="860">
+</picture>
 
-## Repository
+- **Jev decides.** TypeSafe's Jev model returns probabilities, never prose. It judges content kind, manipulation, passage relevance, claim support and each sentence the helper writes.
+- **Code owns the flow.** Thresholds and question wording live in [`content/questions.yaml`](content/questions.yaml).
+- **The LLM helper only assists.** It extracts claims, writes search queries, reads screenshots and drafts the summary. It never judges. DeepSeek is the default, and any OpenAI-compatible or Anthropic endpoint works.
+- **The shell is small.** The app uses Tauri 2 and Rust for the tray, hotkey, clipboard capture and credential store. The [decision log](docs/DECISIONS.md) records why.
 
-| Path | What |
-|---|---|
-| `engine/` | Pure TypeScript engine: fast lane, deep lane, Jev client, helper adapter, fetching. No Tauri or DOM dependency. Tested with Vitest. |
-| `content/` | `questions.yaml` (every Jev question, label, threshold), `lines.yaml` (the joke bank, tagged by surface), `helper-prompts.yaml`. |
-| `src/` | Popover, settings wizard, and screenshot overlay. Plain TypeScript with Vite. |
-| `src-tauri/` | Rust shell: tray, hotkey, clipboard capture, credential store, screenshot grab. |
-| `site/` | Landing page and the Resend signup function. |
-| `test/` | Unit tests, the 20-sample eval set, and the eval runner. |
-| `docs/` | PRD, technical plan, handoff, decisions, assets, setup guide, costs. |
+| Path | What it holds |
+| --- | --- |
+| `engine/` | Fast lane, deep lane, Jev client and helper adapter, in TypeScript with no Tauri or DOM dependency |
+| `content/` | Questions, labels, thresholds, helper prompts and the joke bank |
+| `src/` | Popover, settings and screenshot overlay |
+| `src-tauri/` | The Rust shell |
+| `test/` | Unit tests, a 20-sample evaluation set and its runner |
 
-## Keys
+## Requirements
 
-Two different places, on purpose:
+Callout uses your own keys. Open Settings, paste each key, then press **Test and save**.
 
-- **Testers and the shipped app:** no `.env`. Open Settings, paste each key,
-  press Test and save. Keys go to Windows Credential Manager; nothing is
-  written to disk in plain text. The fast lane works with the TypeSafe key
-  alone.
-- **Developers, tests, and the eval script:** copy `.env.example` to `.env`
-  and fill in `TYPESAFE_API_KEY`, `TAVILY_API_KEY`, `DEEPSEEK_API_KEY`. Tests
-  and `npm run eval:samples` read it. Variables already in the shell win.
+| Key | Needed for | Required |
+| --- | --- | --- |
+| TypeSafe | Each judgment. The fast lane works with this key alone. | Yes |
+| Tavily | Web evidence for the deep lane | Recommended |
+| LLM helper | Claim extraction, screenshots and the summary | Recommended |
 
-## Develop
-
-```sh
-npm install
-npm test                 # engine tests (no keys needed; a live DeepSeek test runs if DEEPSEEK_API_KEY is set)
-npm run typecheck
-npm run dev              # popover in a browser at http://localhost:1420 (no hotkey, no secrets)
-npm run tauri dev        # the real app; needs Rust and, on Windows, the WebView2 runtime
-npm run tauri build      # signed installer when signing secrets are set (see .github/workflows/build.yml)
-```
-
-Run the 20-sample acceptance set against real keys and write a human review
-sheet plus a cost table:
-
-```sh
-TYPESAFE_API_KEY=... TAVILY_API_KEY=... DEEPSEEK_API_KEY=... npm run eval:samples
-```
-
-Windows is the only shipping target in v1. The engine and UI build and test
-on any OS; the Rust shell type-checks on Linux with
-`cargo check --target x86_64-pc-windows-gnu` (needs mingw-w64) and is built for real by the
-Windows CI job.
+The [setup guide](docs/SETUP.md) has the steps.
 
 ## Privacy
 
-No server, no account, no telemetry. Text you check goes to the three APIs
-you configure and to the pages Callout fetches for evidence. Keys sit in the
-Windows credential store. History is off by default. Usage counters are
-always on and stay on your machine.
+Callout has no server, no account and no telemetry. Text you check goes to the
+APIs you configure and to the pages Callout fetches for evidence. Keys are in
+Windows Credential Manager. History is off by default. Usage counters stay on your
+machine.
+
+## Status
+
+Released as 0.2.0 on GitHub. The release notes call it an unsigned beta build.
+
+| In 0.2.0 | Not yet |
+| --- | --- |
+| Fast lane and deep lane | Code signing |
+| Tray app, hotkey, settings and screenshot capture | macOS |
+| MSI and NSIS installers built by CI | Final mascot art. The build ships a placeholder. |
+| Engine tests in CI, then a Windows build | Published evaluation numbers. The [cost table](docs/COSTS.md) is pending. |
+
+TypeSafe's Jev is in beta. Callout depends on it for every judgment, and its
+pricing is unpublished ([cost notes](docs/COSTS.md)).
+
+## Build from source
+
+```sh
+pnpm install
+pnpm test
+pnpm typecheck
+```
+
+<!-- tested: 2026-11-06, clean clone on Ubuntu, Node 24.22.1, pnpm 10.33.2 -->
+
+`pnpm test` needs no keys. To run the app:
+
+```sh
+pnpm tauri dev
+```
+
+Untested on a clean machine. It needs Rust and, on Windows, the WebView2 runtime.
+CI runs the test and Windows build jobs in
+[`build.yml`](.github/workflows/build.yml).
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md). Most improvements are edits to the
-three files under `content/`, no TypeScript required. The honesty rules are
-not negotiable and pull requests that bend them are closed.
+See [CONTRIBUTING.md](CONTRIBUTING.md). Most improvements are edits to the three
+files under `content/`. No TypeScript is required.
 
 ## License
 
-MIT, copyright Jeff Kazzee. Use the code in anything, open or closed,
-commercial or not. Keep the copyright notice with the code and with any
-substantial part you reuse; that notice is the attribution. Full text and a
-one-line attribution example in [LICENSE](LICENSE) and on the
-[site](https://the-little-ai-company.github.io/callout/docs/license.html).
-
-## Docs
-
-- Site docs: [Using Callout](https://the-little-ai-company.github.io/callout/docs/using.html), [How it works](https://the-little-ai-company.github.io/callout/docs/how-it-works.html).
-- `docs/PRD.md` and `docs/PLAN.md`: what and how, binding.
-- `docs/DECISIONS.md`: stack choices and their reasons.
-- `docs/SETUP.md`: tester guide to the three keys.
-- `docs/ASSETS.md`: the art, with prompts.
-- `docs/COSTS.md`: usage and cost table, filled from real runs.
+MIT, with a plain-language note on attribution. See [LICENSE](LICENSE).
